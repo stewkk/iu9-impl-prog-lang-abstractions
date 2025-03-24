@@ -1,5 +1,6 @@
-use std::{env, fs};
-use std::error::Error;
+use std::env;
+
+use stack_assembly_interpreter::run;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -8,10 +9,3 @@ fn main() {
     run(&file_paths).unwrap();
 }
 
-fn run(file_paths: &[String]) -> Result<(), Box<dyn Error>> {
-    let contents: Result<Vec<_>, _> = file_paths.iter().map(fs::read_to_string).collect();
-
-    println!("Contents: |{}|", contents?.concat());
-
-    Ok(())
-}
