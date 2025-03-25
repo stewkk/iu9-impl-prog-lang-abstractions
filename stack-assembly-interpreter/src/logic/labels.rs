@@ -55,6 +55,16 @@ mod tests {
         assert_eq!(got.unwrap(), expected)
     }
 
-    // TODO: label defined twice test
     #[test]
+    fn error_on_duplicate_declaration() {
+        let tokens = vec![
+            Token::Declaration("a1".to_string()),
+            Token::Integer(123),
+            Token::Declaration("a1".to_string()),
+        ];
+
+        let got = get_labels(&tokens);
+
+        assert_eq!(got.unwrap_err().to_string(), "label declared twice: a1");
+    }
 }
