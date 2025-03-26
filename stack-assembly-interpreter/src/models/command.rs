@@ -1,5 +1,7 @@
+pub type Opcode = i32;
+
 pub struct Command<'a> {
-    pub code: i32,
+    pub code: Opcode,
     pub mnemonic: &'a str,
     pub handler: CommandHandler,
 }

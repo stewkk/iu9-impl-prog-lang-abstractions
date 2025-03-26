@@ -1,10 +1,10 @@
 use crate::models::command::Command;
 
 pub static COMMANDS: &[Command] = &[
-    Command{code: -1, mnemonic: "ADD", handler: AddHandler},
-    Command{code: -2, mnemonic: "SUB", handler: SubHandler},
+    Command{code: -1, mnemonic: "ADD", handler: add_handler},
+    Command{code: -2, mnemonic: "SUB", handler: sub_handler},
 ];
 
-fn AddHandler() -> () {}
+fn add_handler() -> () {}
 
-fn SubHandler() -> () {}
+fn sub_handler() -> () {}

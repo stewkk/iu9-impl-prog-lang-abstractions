@@ -4,12 +4,13 @@ use anyhow::{bail, Result};
 
 use super::command::COMMANDS;
 use crate::models::token::Token;
+use crate::models::command::Opcode;
 
-fn get_default_labels() -> HashMap<&'static str, i32> {
+fn get_default_labels() -> HashMap<&'static str, Opcode> {
     COMMANDS.iter().map(|x| (x.mnemonic, x.code)).collect()
 }
 
-pub fn get_labels(tokens: &[Token]) -> Result<HashMap<&str, i32>> {
+pub fn get_labels(tokens: &[Token]) -> Result<HashMap<&str, Opcode>> {
     let mut current = 256;
     let mut labels = get_default_labels();
     for token in tokens {
