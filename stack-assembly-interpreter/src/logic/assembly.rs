@@ -10,13 +10,13 @@ use super::labels;
 fn generate_opcodes(tokens: &[Token], labels: HashMap<&str, Opcode>) -> Result<Vec<Opcode>> {
     tokens.iter()
           .filter_map(|x| match x {
-              Token::Declaration(_, _) => None,
-              _ => Some(x),
+            Token::Declaration(_, _) => None,
+            _ => Some(x),
           })
           .map(|x| match x {
-              Token::Ident(i, _) => labels.get(i.as_str()).copied().ok_or_else(|| anyhow!("undefined ident: {i}")),
-              Token::Integer(i, _) => Ok(*i),
-              Token::Declaration(_, _) => Err(anyhow!("didn't expect declaration here")),
+            Token::Ident(i, pos) => labels.get(i.as_str()).copied().ok_or_else(|| anyhow!("{pos}: undefined ident: \"{i}\"")),
+            Token::Integer(i, _) => Ok(*i),
+            Token::Declaration(_, pos) => Err(anyhow!("{pos}: didn't expect declaration here")),
           })
           .collect()
 }
@@ -85,6 +85,6 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
         let got = assembly(&[TextFile{name: "test", text}]);
 
-        assert_eq!(got.unwrap_err().to_string(), "undefined ident: a");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:4: undefined ident: \"a\"");
     }
 }

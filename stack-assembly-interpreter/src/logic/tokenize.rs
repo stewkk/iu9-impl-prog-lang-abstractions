@@ -1,9 +1,13 @@
-use anyhow::{anyhow, Result, Context};
+use anyhow::{anyhow, Result, Context, Error};
 use once_cell::unsync::Lazy;
 use regex::Regex;
 
 use crate::models::token::Token;
 use crate::models::token::Position;
+
+fn failed_to_tokenize_error(token_type: &str, token_str: &str, pos: &Position) -> Error {
+    anyhow!("{pos}: failed to tokenize {token_type}: \"{token_str}\"")
+}
 
 fn get_token(token_str: &str, pos: Position) -> Result<Token> {
     let ident_re = Lazy::new(|| Regex::new(r"^[[:alpha:]_][[:word:]-]*$").unwrap());
@@ -11,14 +15,15 @@ fn get_token(token_str: &str, pos: Position) -> Result<Token> {
 
     match token_str.chars().next() {
         Some('a'..='z' | 'A'..='Z' | '_') => ident_re.is_match(token_str)
-                                                     .then_some(Token::Ident(token_str.to_string(), pos) )
-                                                     .ok_or(anyhow!("failed to tokenize ident: {}", token_str)),
-        Some('0'..='9' | '+' | '-') => token_str.parse::<i32>().map(|i| Token::Integer(i, pos))
-                                                               .with_context(|| format!("failed to tokenize integer: {token_str}")),
+                                                     .then_some(Token::Ident(token_str.to_string(), pos.clone()) )
+                                                     .ok_or_else(|| failed_to_tokenize_error("ident", token_str, &pos)),
+        Some('0'..='9' | '+' | '-') => token_str.parse::<i32>().map(|i| Token::Integer(i, pos.clone()))
+                                                               .with_context(|| failed_to_tokenize_error("integer", token_str, &pos)),
         Some(':') => declaration_re.is_match(token_str)
-                                   .then_some(Token::Declaration(token_str[1..].to_string(), pos))
-                                   .ok_or(anyhow!("failed to tokenize declaration: {}", token_str)),
-        _ => Err(anyhow!("unknown token: {}", token_str))
+                                   .then_some(Token::Declaration(token_str[1..].to_string(), pos.clone()))
+                                   .ok_or_else(|| failed_to_tokenize_error("declaration", token_str, &pos)),
+        Some(x) => Err(anyhow!("{pos}: token starts with illegal symbol: \"{x}\"")),
+        None => Err(anyhow!("{pos}: no valid symbol"))
     }
 }
 
@@ -87,16 +92,16 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
         let got = tokenize(text, "test");
 
-        assert_eq!(got.unwrap_err().to_string(), "failed to tokenize ident: PROGRAM+SIZE");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:1: failed to tokenize ident: \"PROGRAM+SIZE\"");
     }
 
     #[test]
     fn tokenize_error_too_big_integer() {
-        let text = "99999999999999999999";
+        let text = "123 99999999999999999999";
 
         let got = tokenize(text, "test");
 
-        assert_eq!(got.unwrap_err().to_string(), "failed to tokenize integer: 99999999999999999999");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:5: failed to tokenize integer: \"99999999999999999999\"");
     }
 
     #[test]
@@ -105,7 +110,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
         let got = tokenize(text, "test");
 
-        assert_eq!(got.unwrap_err().to_string(), "unknown token: ~123");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:5: token starts with illegal symbol: \"~\"");
     }
 
     #[test]
@@ -114,7 +119,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
         let got = tokenize(text, "test");
 
-        assert_eq!(got.unwrap_err().to_string(), "failed to tokenize declaration: :123");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:5: failed to tokenize declaration: \":123\"");
     }
 
 }

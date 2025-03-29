@@ -4,7 +4,6 @@ use anyhow::{bail, Result};
 
 use super::command::COMMANDS;
 use crate::models::token::Token;
-use crate::models::token::Position;
 use crate::models::command::Opcode;
 
 fn get_default_labels() -> HashMap<&'static str, Opcode> {
@@ -15,9 +14,9 @@ pub fn get_labels<'a>(tokens: &'a [Token]) -> Result<HashMap<&'a str, Opcode>> {
     let mut current = 256;
     let mut labels = get_default_labels();
     for token in tokens {
-        if let Token::Declaration(decl, _) = token {
+        if let Token::Declaration(decl, pos) = token {
             if let Some(_) = labels.insert(decl, current) {
-                bail!("label declared twice: {decl}");
+                bail!("{pos}: label declared twice: {decl}");
             }
         } else {
             current += 1;
@@ -30,6 +29,7 @@ pub fn get_labels<'a>(tokens: &'a [Token]) -> Result<HashMap<&'a str, Opcode>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::models::token::Position;
 
     #[test]
     fn calculates_labels_map() {
@@ -61,12 +61,12 @@ mod tests {
     fn error_on_duplicate_declaration() {
         let tokens = vec![
             Token::Declaration("a1".to_string(), Position{filename: "test".to_string(), line: 1, column: 1}),
-            Token::Integer(123, Position{filename: "test".to_string(), line: 1, column: 1}),
-            Token::Declaration("a1".to_string(), Position{filename: "test".to_string(), line: 1, column: 1}),
+            Token::Integer(123, Position{filename: "test".to_string(), line: 1, column: 2}),
+            Token::Declaration("a1".to_string(), Position{filename: "test".to_string(), line: 1, column: 3}),
         ];
 
         let got = get_labels(&tokens);
 
-        assert_eq!(got.unwrap_err().to_string(), "label declared twice: a1");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:3: label declared twice: a1");
     }
 }
