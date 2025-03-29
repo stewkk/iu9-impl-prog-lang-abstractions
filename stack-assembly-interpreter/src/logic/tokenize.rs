@@ -3,29 +3,47 @@ use once_cell::unsync::Lazy;
 use regex::Regex;
 
 use crate::models::token::Token;
+use crate::models::token::Position;
 
-fn get_token(token_str: &str) -> Result<Token> {
+fn get_token(token_str: &str, pos: Position) -> Result<Token> {
     let ident_re = Lazy::new(|| Regex::new(r"^[[:alpha:]_][[:word:]-]*$").unwrap());
     let declaration_re = Lazy::new(|| Regex::new(r"^:[[:alpha:]_][[:word:]-]*$").unwrap());
 
     match token_str.chars().next() {
         Some('a'..='z' | 'A'..='Z' | '_') => ident_re.is_match(token_str)
-                                                     .then_some(Token::Ident(token_str.to_string()))
+                                                     .then_some(Token::Ident(token_str.to_string(), pos) )
                                                      .ok_or(anyhow!("failed to tokenize ident: {}", token_str)),
-        Some('0'..='9' | '+' | '-') => token_str.parse::<i32>().map(Token::Integer)
+        Some('0'..='9' | '+' | '-') => token_str.parse::<i32>().map(|i| Token::Integer(i, pos))
                                                                .with_context(|| format!("failed to tokenize integer: {token_str}")),
         Some(':') => declaration_re.is_match(token_str)
-                                   .then_some(Token::Declaration(token_str[1..].to_string()))
+                                   .then_some(Token::Declaration(token_str[1..].to_string(), pos))
                                    .ok_or(anyhow!("failed to tokenize declaration: {}", token_str)),
         _ => Err(anyhow!("unknown token: {}", token_str))
     }
 }
 
-pub fn tokenize(text: &str) -> Result<Vec<Token>> {
-    let lines = text.split('\n').filter_map(|x| x.split(';').next());
-    let token_strings = lines.map(|x| x.split_whitespace()).flatten();
+pub fn tokenize(text: &str, filename: &str) -> Result<Vec<Token>> {
+    let lines = text.lines().filter_map(|x| x.split(';').next()).enumerate();
+    let lines = lines.map(|x| {
+        let (i, line) = x;
+        (i+1, line.split(&[' ', '\t']))
+    });
 
-    token_strings.map(get_token).collect()
+    let mut res: Vec<Token> = vec![];
+    for line in lines {
+        let (i, tokens) = line;
+        let mut column: usize = 1;
+        for token in tokens {
+            if token.is_empty() {
+                column += 1;
+                continue;
+            }
+            res.push(get_token(token, Position{filename: filename.to_string(), line: i, column})?);
+            column += token.len()+1;
+        }
+    }
+
+    Ok(res)
 }
 
 #[cfg(test)]
@@ -40,26 +58,26 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 1234 PROGRAM_SIZE
 :_Loop :_Read_number_ :_- ; _Loop == _Read_number_ == _- == 268";
 
-        let got = tokenize(text);
+        let got = tokenize(text, "test");
 
         assert_eq!(got.unwrap(), vec![
-            Token::Integer(10),
-            Token::Integer(65),
-            Token::Integer(-40),
-            Token::Declaration("_".to_string()),
-            Token::Ident("_Loop".to_string()),
-            Token::Declaration("a1".to_string()),
-            Token::Ident("HALT".to_string()),
-            Token::Ident("_Read_number_".to_string()),
-            Token::Ident("_-".to_string()),
-            Token::Ident("_".to_string()),
-            Token::Ident("a1".to_string()),
-            Token::Integer(123),
-            Token::Integer(1234),
-            Token::Ident("PROGRAM_SIZE".to_string()),
-            Token::Declaration("_Loop".to_string()),
-            Token::Declaration("_Read_number_".to_string()),
-            Token::Declaration("_-".to_string()),
+            Token::Integer(10, Position{filename: "test".to_string(), line: 1, column: 1}),
+            Token::Integer(65, Position{filename: "test".to_string(), line: 1, column: 4}),
+            Token::Integer(-40, Position{filename: "test".to_string(), line: 1, column: 8}),
+            Token::Declaration("_".to_string(), Position{filename: "test".to_string(), line: 1, column: 12}),
+            Token::Ident("_Loop".to_string(), Position{filename: "test".to_string(), line: 2, column: 1}),
+            Token::Declaration("a1".to_string(), Position{filename: "test".to_string(), line: 2, column: 7}),
+            Token::Ident("HALT".to_string(), Position{filename: "test".to_string(), line: 2, column: 11}),
+            Token::Ident("_Read_number_".to_string(), Position{filename: "test".to_string(), line: 2, column: 16}),
+            Token::Ident("_-".to_string(), Position{filename: "test".to_string(), line: 2, column: 30}),
+            Token::Ident("_".to_string(), Position{filename: "test".to_string(), line: 2, column: 33}),
+            Token::Ident("a1".to_string(), Position{filename: "test".to_string(), line: 2, column: 35}),
+            Token::Integer(123, Position{filename: "test".to_string(), line: 3, column: 1}),
+            Token::Integer(1234, Position{filename: "test".to_string(), line: 4, column: 1}),
+            Token::Ident("PROGRAM_SIZE".to_string(), Position{filename: "test".to_string(), line: 4, column: 6}),
+            Token::Declaration("_Loop".to_string(), Position{filename: "test".to_string(), line: 5, column: 1}),
+            Token::Declaration("_Read_number_".to_string(), Position{filename: "test".to_string(), line: 5, column: 8}),
+            Token::Declaration("_-".to_string(), Position{filename: "test".to_string(), line: 5, column: 23}),
         ]);
     }
 
@@ -67,7 +85,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
     fn tokenize_error_unknown_symbol_in_ident() {
         let text = "PROGRAM+SIZE";
 
-        let got = tokenize(text);
+        let got = tokenize(text, "test");
 
         assert_eq!(got.unwrap_err().to_string(), "failed to tokenize ident: PROGRAM+SIZE");
     }
@@ -76,7 +94,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
     fn tokenize_error_too_big_integer() {
         let text = "99999999999999999999";
 
-        let got = tokenize(text);
+        let got = tokenize(text, "test");
 
         assert_eq!(got.unwrap_err().to_string(), "failed to tokenize integer: 99999999999999999999");
     }
@@ -85,7 +103,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
     fn tokenize_error_unknown_symbol() {
         let text = "123 ~123";
 
-        let got = tokenize(text);
+        let got = tokenize(text, "test");
 
         assert_eq!(got.unwrap_err().to_string(), "unknown token: ~123");
     }
@@ -94,7 +112,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
     fn tokenize_error_ill_formed_declaration() {
         let text = "123 :123";
 
-        let got = tokenize(text);
+        let got = tokenize(text, "test");
 
         assert_eq!(got.unwrap_err().to_string(), "failed to tokenize declaration: :123");
     }
