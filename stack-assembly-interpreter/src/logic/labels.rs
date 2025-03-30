@@ -7,7 +7,18 @@ use crate::models::token::Token;
 use crate::models::command::Opcode;
 
 fn get_default_labels() -> HashMap<&'static str, Opcode> {
-    COMMANDS.iter().map(|x| (x.mnemonic, x.code)).collect()
+    COMMANDS.iter()
+            .enumerate()
+            .filter_map(
+                |(i, cmd_opt)| cmd_opt.as_ref()
+                                      .map(
+                                          |cmd| cmd.mnemonics.iter()
+                                                             .map(|mnemonic| (*mnemonic, -(i as Opcode)))
+                                                             .collect::<Vec<_>>()
+                                      )
+            )
+            .flatten()
+            .collect()
 }
 
 pub fn get_labels<'a>(tokens: &'a [Token]) -> Result<HashMap<&'a str, Opcode>> {

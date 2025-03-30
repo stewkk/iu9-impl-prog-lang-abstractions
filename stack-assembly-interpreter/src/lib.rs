@@ -15,7 +15,3 @@ pub fn run(file_paths: &[String]) -> Result<(), Box<dyn error::Error>> {
     Ok(())
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-}
