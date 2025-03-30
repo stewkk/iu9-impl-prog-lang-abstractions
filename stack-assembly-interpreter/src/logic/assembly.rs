@@ -14,7 +14,10 @@ fn generate_instructions(tokens: &[Token], labels: HashMap<&str, Opcode>) -> Res
             _ => Some(x),
           })
           .map(|x| match x {
-            Token::Ident(i, pos) => labels.get(i.as_str()).copied().map(|opcode| Instruction{opcode, token: x.clone()}).ok_or_else(|| anyhow!("{pos}: undefined ident: \"{i}\"")),
+            Token::Ident(i, pos) => labels.get(i.as_str())
+                                          .copied()
+                                          .map(|opcode| Instruction{opcode, token: x.clone()})
+                                          .ok_or_else(|| anyhow!("{pos}: undefined ident: \"{i}\"")),
             Token::Integer(i, _) => Ok(Instruction{opcode: *i, token: x.clone()}),
             Token::Declaration(_, pos) => Err(anyhow!("{pos}: didn't expect declaration here")),
           })
@@ -27,8 +30,12 @@ pub struct TextFile<'a> {
 }
 
 pub fn assembly(files: &[TextFile]) -> Result<Vec<Instruction>> {
-    let tokens_by_file: Result<Vec<Vec<Token>>> = files.iter().map(|file| tokenize::tokenize(file.text, file.name)).collect();
-    let tokens: Vec<Token> = tokens_by_file?.into_iter().flatten().collect();
+    let tokens_by_file: Result<Vec<Vec<Token>>> = files.iter()
+                                                       .map(|file| tokenize::tokenize(file.text, file.name))
+                                                       .collect();
+    let tokens: Vec<Token> = tokens_by_file?.into_iter()
+                                            .flatten()
+                                            .collect();
     let labels = labels::get_labels(&tokens)?;
     generate_instructions(&tokens, labels)
 }
