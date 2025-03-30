@@ -1,3 +1,5 @@
+use super::command::Instruction;
+
 #[derive(Debug, PartialEq)]
 pub struct Registers {
     pub ip: i64,
@@ -7,15 +9,16 @@ pub struct Registers {
 }
 
 pub const MEM_SIZE: i64 = 1000000;
-pub type Memory = Box<[i64; MEM_SIZE as usize]>;
+pub type Memory = Vec<i64>;
 
 pub struct VM {
     registers: Registers,
     memory: Memory,
+    code: Vec<Instruction>,
 }
 
 impl VM {
-    pub fn new() -> Self {
+    pub fn new(code: Vec<Instruction>) -> Self {
         let res = Self {
             memory: vec![0; MEM_SIZE as usize].try_into().unwrap(),
             registers: Registers{
@@ -24,6 +27,7 @@ impl VM {
                 fp: 0,
                 rv: 0,
             },
+            code,
         };
         res
     }
@@ -43,7 +47,7 @@ mod tests {
 
     #[test]
     fn vm_in_initial_state_sets_registers() {
-        let vm = VM::new();
+        let vm = VM::new(vec![]);
 
         let got = vm.registers();
 
