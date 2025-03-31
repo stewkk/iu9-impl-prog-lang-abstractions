@@ -1,4 +1,4 @@
-use once_cell::sync::Lazy;
+use anyhow::Result;
 
 use super::token::Token;
 use super::vm::VM;
@@ -17,6 +17,6 @@ pub struct Command<'a> {
 }
 
 pub trait CommandHandler {
-    fn handle(&self, vm: &mut VM) -> ();
+    fn handle(&self, vm: &mut VM) -> Result<()>;
 }
 

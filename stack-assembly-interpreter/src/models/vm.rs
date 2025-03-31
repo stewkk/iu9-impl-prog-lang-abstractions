@@ -23,8 +23,9 @@ impl VM {
     const BANNED_SIZE: usize = 256;
 
     pub fn new(code: Vec<Instruction>) -> Self {
+        let actual_memory_size = (Self::MEM_SIZE as usize)-code.len()-Self::BANNED_SIZE;
         let res = Self {
-            memory: vec![0; (Self::MEM_SIZE as usize)-code.len()-Self::BANNED_SIZE],
+            memory: vec![0; actual_memory_size],
             registers: Registers{
                 ip: 256,
                 sp: Self::MEM_SIZE,
@@ -44,17 +45,49 @@ impl VM {
         &mut self.registers
     }
 
+    // TODO: refactor duplicate code
     pub fn read_memory(&self, i: i64) -> Result<i64> {
         (|| {
             if i < Self::BANNED_SIZE as i64 {
                 bail!("addresses [-inf, 256) are banned");
             }
-            Ok(0)
-        })().context(anyhow!("invalid memory access at {i}"))
+            let actual = usize::try_from(i)? - 256;
+            if actual < self.code.len() {
+                return Ok(self.code[actual].opcode);
+            }
+            let actual = actual - self.code.len();
+            self.memory.get(actual).copied().ok_or_else(|| anyhow!("address too big"))
+        })().context(anyhow!("invalid memory read at {i}"))
+    }
+
+    pub fn write_memory(&mut self, i: i64, data: i64) -> Result<()> {
+        (|| {
+            if i < Self::BANNED_SIZE as i64 {
+                bail!("addresses [-inf, 256) are banned");
+            }
+            let actual = usize::try_from(i)? - 256;
+            if actual < self.code.len() {
+                bail!("attempt to write at code segment")
+            }
+            let actual = actual - self.code.len();
+            *self.memory.get_mut(actual).ok_or_else(|| anyhow!("address too big"))? = data;
+            Ok(())
+        })().context(anyhow!("invalid memory write at {i}"))
     }
 
     pub fn read_stack(&self, offset: i64) -> Result<i64> {
-        self.read_memory(self.registers.sp + offset)
+        self.read_memory(self.registers.sp + offset).context("failed to read value from stack")
+    }
+
+    pub fn push(&mut self, data: i64) -> Result<()> {
+        self.registers.sp -= 1;
+        self.write_memory(self.registers.sp, data).context("failed to push value on stack")
+    }
+
+    pub fn pop(&mut self) -> Result<i64> {
+        let res = self.read_memory(self.registers.sp)?;
+        self.registers.sp += 1;
+        Ok(res)
     }
 }
 
@@ -81,7 +114,7 @@ mod tests {
         let vm = VM::new(vec![]);
 
         for i in -10..256 {
-            assert_eq!(vm.read_memory(i).unwrap_err().to_string(), format!("invalid memory access at {i}"))
+            assert_eq!(vm.read_memory(i).unwrap_err().to_string(), format!("invalid memory read at {i}"))
         }
     }
 }

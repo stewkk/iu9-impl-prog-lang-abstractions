@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::models::{command::{Command, CommandHandler}, vm::VM};
 
 pub const COMMANDS: [Option<Command>; 3] = [
@@ -8,14 +10,16 @@ pub const COMMANDS: [Option<Command>; 3] = [
 
 pub struct AddHandler;
 impl CommandHandler for AddHandler {
-    fn handle(&self, vm: &mut VM) -> () {
-        todo!()
+    fn handle(&self, vm: &mut VM) -> Result<()> {
+        let a = vm.pop()?;
+        let b = vm.pop()?;
+        vm.push(a+b)
     }
 }
 
 pub struct SubHandler;
 impl CommandHandler for SubHandler {
-    fn handle(&self, vm: &mut VM) -> () {
+    fn handle(&self, vm: &mut VM) -> Result<()> {
         todo!()
     }
 }
@@ -37,8 +41,10 @@ mod tests {
                 ),
             }
         ]);
+        vm.push(2).unwrap();
+        vm.push(3).unwrap();
 
-        AddHandler{}.handle(&mut vm);
+        AddHandler{}.handle(&mut vm).unwrap();
 
         assert_eq!(vm.read_stack(0).unwrap(), 5)
     }
