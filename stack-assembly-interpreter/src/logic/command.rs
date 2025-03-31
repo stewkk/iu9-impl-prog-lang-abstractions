@@ -1,18 +1,24 @@
-use crate::models::command::{Command, CommandHandler};
+use crate::models::{command::{Command, CommandHandler}, vm::VM};
 
-pub static COMMANDS: &[Option<Command>] = &[
+pub const COMMANDS: [Option<Command>; 3] = [
     None,
-    Some(Command{mnemonics: &["ADD"], handler: ADD_HANDLER}),
-    Some(Command{mnemonics: &["SUB"], handler: SUB_HANDLER}),
+    Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
+    Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
 ];
 
-static ADD_HANDLER: CommandHandler = |_vm| {
-    ()
-};
+pub struct AddHandler;
+impl CommandHandler for AddHandler {
+    fn handle(&self, vm: &mut VM) -> () {
+        todo!()
+    }
+}
 
-static SUB_HANDLER: CommandHandler = |_vm| {
-    ()
-};
+pub struct SubHandler;
+impl CommandHandler for SubHandler {
+    fn handle(&self, vm: &mut VM) -> () {
+        todo!()
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -32,7 +38,7 @@ mod tests {
             }
         ]);
 
-        ADD_HANDLER(&mut vm);
+        AddHandler{}.handle(&mut vm);
 
         assert_eq!(vm.read_stack(0).unwrap(), 5)
     }

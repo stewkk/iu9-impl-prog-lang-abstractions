@@ -1,7 +1,9 @@
+use once_cell::sync::Lazy;
+
 use super::token::Token;
 use super::vm::VM;
 
-pub type Opcode = i32;
+pub type Opcode = i64;
 
 #[derive(Debug, PartialEq)]
 pub struct Instruction {
@@ -11,13 +13,10 @@ pub struct Instruction {
 
 pub struct Command<'a> {
     pub mnemonics: &'a [&'a str],
-    pub handler: CommandHandler,
+    pub handler: &'static dyn CommandHandler,
 }
 
 pub trait CommandHandler {
-    fn handle(vm: &mut VM) -> () {
-
-    }
+    fn handle(&self, vm: &mut VM) -> ();
 }
 
-// pub type CommandHandler = fn(vm: &mut VM) -> ();

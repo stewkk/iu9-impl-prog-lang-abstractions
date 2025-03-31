@@ -17,7 +17,7 @@ fn get_token(token_str: &str, pos: Position) -> Result<Token> {
         Some('a'..='z' | 'A'..='Z' | '_') => ident_re.is_match(token_str)
                                                      .then_some(Token::Ident(token_str.to_string(), pos.clone()) )
                                                      .ok_or_else(|| failed_to_tokenize_error("ident", token_str, &pos)),
-        Some('0'..='9' | '+' | '-') => token_str.parse::<i32>().map(|i| Token::Integer(i, pos.clone()))
+        Some('0'..='9' | '+' | '-') => token_str.parse::<i64>().map(|i| Token::Integer(i, pos.clone()))
                                                                .with_context(|| failed_to_tokenize_error("integer", token_str, &pos)),
         Some(':') => declaration_re.is_match(token_str)
                                    .then_some(Token::Declaration(token_str[1..].to_string(), pos.clone()))
