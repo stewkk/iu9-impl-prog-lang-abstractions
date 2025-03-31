@@ -1,4 +1,5 @@
 use super::token::Token;
+use super::vm::VM;
 
 pub type Opcode = i32;
 
@@ -13,4 +14,10 @@ pub struct Command<'a> {
     pub handler: CommandHandler,
 }
 
-pub type CommandHandler = fn() -> ();
+pub trait CommandHandler {
+    fn handle(vm: &mut VM) -> () {
+
+    }
+}
+
+// pub type CommandHandler = fn(vm: &mut VM) -> ();
