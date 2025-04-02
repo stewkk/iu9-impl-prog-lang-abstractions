@@ -81,9 +81,9 @@ pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
     None,
     None,
-    None,
-    None,
-    None,
+    Some(Command{mnemonics: &["MUL"], handler: &MulHandler{}}),
+    Some(Command{mnemonics: &["DIV"], handler: &DivHandler{}}),
+    Some(Command{mnemonics: &["MOD"], handler: &ModHandler{}}),
     None,
     Some(Command{mnemonics: &["OUT"], handler: &OutHandler{}}),
 ];
@@ -104,6 +104,9 @@ bin_op_handler!(BitwiseOrHandler, |);
 bin_op_handler!(BitwiseXorHandler, ^);
 bin_op_handler!(LeftShiftHandler, <<);
 bin_op_handler!(RightShiftHandler, >>);
+bin_op_handler!(MulHandler, *);
+bin_op_handler!(DivHandler, /);
+bin_op_handler!(ModHandler, %);
 
 get_register_handler!(GetIPHandler, ip);
 get_register_handler!(GetFPHandler, fp);
