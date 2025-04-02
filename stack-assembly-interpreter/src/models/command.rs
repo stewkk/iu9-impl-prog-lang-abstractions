@@ -16,7 +16,9 @@ pub struct Command<'a> {
     pub handler: &'static dyn CommandHandler,
 }
 
+pub type ReturnCode = i64;
+
 pub trait CommandHandler {
-    fn handle(&self, vm: &mut VM) -> Result<()>;
+    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>>;
 }
 

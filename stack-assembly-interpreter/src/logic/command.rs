@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 
-use crate::models::{command::{Command, CommandHandler, Opcode}, vm::VM};
+use crate::models::{command::{Command, CommandHandler, Opcode, ReturnCode}, vm::VM};
 
 pub const COMMANDS: [Option<Command>; 37] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
@@ -43,7 +43,7 @@ pub const COMMANDS: [Option<Command>; 37] = [
 ];
 
 pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
-    let index = opcode as usize - 1;
+    let index = -opcode as usize - 1;
     COMMANDS.get(index)
             .map(Option::as_ref)
             .flatten()
@@ -53,26 +53,29 @@ pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
 
 pub struct AddHandler;
 impl CommandHandler for AddHandler {
-    fn handle(&self, vm: &mut VM) -> Result<()> {
+    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
         let y = vm.pop()?;
         let x = vm.pop()?;
-        vm.push(x+y)
+        vm.push(x+y)?;
+        Ok(None)
     }
 }
 
 pub struct SubHandler;
 impl CommandHandler for SubHandler {
-    fn handle(&self, vm: &mut VM) -> Result<()> {
+    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
         let y = vm.pop()?;
         let x = vm.pop()?;
-        vm.push(x-y)
+        vm.push(x-y)?;
+        Ok(None)
     }
 }
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
-    fn handle(&self, vm: &mut VM) -> Result<()> {
-        Ok(())
+    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+        let rc = vm.pop()?;
+        Ok(Some(rc))
     }
 }
 

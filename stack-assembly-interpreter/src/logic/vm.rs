@@ -1,20 +1,28 @@
 use anyhow::Result;
 
 use crate::models::vm::VM;
+use crate::models::command::ReturnCode;
 
 use super::command::get_handler;
 
-pub fn execute(mut vm: VM) -> Result<()> {
-    execute_step(&mut vm)
+pub fn execute(mut vm: VM) -> Result<ReturnCode> {
+    loop {
+        if let Some(rc) = execute_step(&mut vm)? {
+            return Ok(rc)
+        }
+    }
 }
 
-fn execute_step(vm: &mut VM) -> Result<()> {
+fn execute_step(vm: &mut VM) -> Result<Option<ReturnCode>> {
     let ip = vm.registers().ip;
     let opcode = vm.read_memory(ip)?;
     vm.registers_mut().ip += 1;
     match opcode {
-        0.. => vm.push(opcode),
-        ..=-1 => get_handler(opcode)?.handle(vm),
+        0.. => {
+            vm.push(opcode)?;
+            Ok(None)
+        },
+        ..=-1 => get_handler(opcode)?.handle(vm)
     }
 }
 
