@@ -5,12 +5,21 @@ use std::{error, fs};
 
 use anyhow::Result;
 
-use logic::tokenize;
+use logic::assembly::{self, TextFile};
+use models::vm::VM;
 
 pub fn run(file_paths: &[String]) -> Result<(), Box<dyn error::Error>> {
-    let contents: Result<Vec<_>, _> = file_paths.iter().map(fs::read_to_string).collect();
+    let files: Result<Vec<TextFile>> = file_paths.into_iter()
+                             .map(|path| -> Result<_> {
+                                 Ok(TextFile{name: path.to_string(), text: fs::read_to_string(path)?})
+                             })
+                             .collect();
 
-    println!("Tokenized: {:?}", tokenize::tokenize(contents?.concat().as_str(), "stdin")?);
+    let instructions = assembly::assembly(&files?)?;
+
+    let vm = VM::new(instructions);
+
+    // TODO: execute instructions
 
     Ok(())
 }

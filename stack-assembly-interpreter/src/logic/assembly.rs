@@ -24,14 +24,14 @@ fn generate_instructions(tokens: &[Token], labels: HashMap<&str, Opcode>) -> Res
           .collect()
 }
 
-pub struct TextFile<'a> {
-    name: &'a str,
-    text: &'a str,
+pub struct TextFile {
+    pub name: String,
+    pub text: String,
 }
 
 pub fn assembly(files: &[TextFile]) -> Result<Vec<Instruction>> {
     let tokens_by_file: Result<Vec<Vec<Token>>> = files.iter()
-                                                       .map(|file| tokenize::tokenize(file.text, file.name))
+                                                       .map(|file| tokenize::tokenize(&file.text, &file.name))
                                                        .collect();
     let tokens: Vec<Token> = tokens_by_file?.into_iter()
                                             .flatten()
@@ -47,13 +47,13 @@ mod tests {
     #[ignore="not implemented"]
     #[test]
     fn translates_assembly_into_opcodes() {
-        let text = "10 +65 -40 :_  ; _ == 259
+        let text = String::from("10 +65 -40 :_  ; _ == 259
 _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 123 ; ;; i'm comment
 1234 PROGRAM_SIZE
-:_Loop :_Read_number_ :_- ; _Loop == _Read_number_ == _- == 268";
+:_Loop :_Read_number_ :_- ; _Loop == _Read_number_ == _- == 268");
 
-      let got = assembly(&[TextFile{name: "test", text}]).unwrap()
+      let got = assembly(&[TextFile{name: "test".to_owned(), text}]).unwrap()
                                                          .iter()
                                                          .map(|x| x.opcode)
                                                          .collect::<Vec<_>>();
@@ -64,9 +64,9 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
     #[ignore="not implemented"]
     #[test]
     fn translates_hello_world() {
-        let text = "72 OUT 101 OUT 108 OUT 108 OUT 111 OUT 33 OUT 0 HALT";
+        let text = String::from("72 OUT 101 OUT 108 OUT 108 OUT 111 OUT 33 OUT 0 HALT");
 
-      let got = assembly(&[TextFile{name: "test", text}]).unwrap()
+      let got = assembly(&[TextFile{name: "test".to_owned(), text}]).unwrap()
                                                          .iter()
                                                          .map(|x| x.opcode)
                                                          .collect::<Vec<_>>();
@@ -76,9 +76,9 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
     #[test]
     fn translates_commands() {
-        let text = "72 0 ADD";
+        let text = String::from("72 0 ADD");
 
-      let got = assembly(&[TextFile{name: "test", text}]).unwrap()
+      let got = assembly(&[TextFile{name: "test".to_owned(), text}]).unwrap()
                                                          .iter()
                                                          .map(|x| x.opcode)
                                                          .collect::<Vec<_>>();
@@ -88,9 +88,9 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
     #[test]
     fn translates_labels() {
-        let text = "72 :a a 123 a";
+        let text = String::from("72 :a a 123 a");
 
-      let got = assembly(&[TextFile{name: "test", text}]).unwrap()
+      let got = assembly(&[TextFile{name: "test".to_owned(), text}]).unwrap()
                                                          .iter()
                                                          .map(|x| x.opcode)
                                                          .collect::<Vec<_>>();
@@ -100,9 +100,9 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
     #[test]
     fn error_on_undefined_ident() {
-        let text = "72 a 123 a";
+        let text = String::from("72 a 123 a");
 
-        let got = assembly(&[TextFile{name: "test", text}]);
+        let got = assembly(&[TextFile{name: "test".to_owned(), text}]);
 
         assert_eq!(got.unwrap_err().to_string(), "test:1:4: undefined ident: \"a\"");
     }
