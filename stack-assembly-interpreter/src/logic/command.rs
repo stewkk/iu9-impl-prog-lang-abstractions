@@ -2,19 +2,49 @@ use anyhow::{anyhow, Result};
 
 use crate::models::{command::{Command, CommandHandler, InputOutput, Opcode, ReturnCode}, vm::VM};
 
+macro_rules! bin_op_handler {
+    ( $handler:ident, $op:tt ) => {
+        pub struct $handler;
+        impl CommandHandler for $handler {
+            fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+                let y = vm.pop()?;
+                let x = vm.pop()?;
+                vm.push(x $op y)?;
+                Ok(None)
+            }
+        }
+    };
+}
+
+macro_rules! get_register_handler {
+    ( $handler:ident, $register:ident ) => {
+        pub struct $handler;
+        impl CommandHandler for $handler {
+            fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+                vm.push(vm.registers().$register)?;
+                Ok(None)
+            }
+        }
+    };
+}
+
 pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
     Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
+    Some(Command{mnemonics: &["BITAND"], handler: &BitwiseAndHandler{}}),
+    Some(Command{mnemonics: &["BITOR"], handler: &BitwiseOrHandler{}}),
+    Some(Command{mnemonics: &["BITXOR"], handler: &BitwiseXorHandler{}}),
+    Some(Command{mnemonics: &["LSHIFT"], handler: &LeftShiftHandler{}}),
+    Some(Command{mnemonics: &["RSHIFT"], handler: &RightShiftHandler{}}),
+    Some(Command{mnemonics: &["CMP"], handler: &CmpHandler{}}),
+    Some(Command{mnemonics: &["GETIP"], handler: &GetIPHandler{}}),
+    Some(Command{mnemonics: &["GETSP"], handler: &GetSPHandler{}}),
+    Some(Command{mnemonics: &["GETFP"], handler: &GetFPHandler{}}),
+    Some(Command{mnemonics: &["GETRV"], handler: &GetRVHandler{}}),
+    // Some(Command{mnemonics: &["SETIP"], handler: &SetIPHandler{}}),
+    // Some(Command{mnemonics: &["SETSP"], handler: &SetSPHandler{}}),
+    // Some(Command{mnemonics: &["SETFP"], handler: &SetFPHandler{}}),
+    // Some(Command{mnemonics: &["SETRV"], handler: &SetRVHandler{}}),
     None,
     None,
     None,
@@ -58,25 +88,18 @@ pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
             .map(|x| x.handler)
 }
 
-pub struct AddHandler;
-impl CommandHandler for AddHandler {
-    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
-        let y = vm.pop()?;
-        let x = vm.pop()?;
-        vm.push(x+y)?;
-        Ok(None)
-    }
-}
+bin_op_handler!(AddHandler, +);
+bin_op_handler!(SubHandler, -);
+bin_op_handler!(BitwiseAndHandler, &);
+bin_op_handler!(BitwiseOrHandler, |);
+bin_op_handler!(BitwiseXorHandler, ^);
+bin_op_handler!(LeftShiftHandler, <<);
+bin_op_handler!(RightShiftHandler, >>);
 
-pub struct SubHandler;
-impl CommandHandler for SubHandler {
-    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
-        let y = vm.pop()?;
-        let x = vm.pop()?;
-        vm.push(x-y)?;
-        Ok(None)
-    }
-}
+get_register_handler!(GetIPHandler, ip);
+get_register_handler!(GetFPHandler, fp);
+get_register_handler!(GetSPHandler, sp);
+get_register_handler!(GetRVHandler, rv);
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
@@ -91,6 +114,22 @@ impl CommandHandler for OutHandler {
     fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let a = vm.pop()?;
         io.print_char(a)?;
+        Ok(None)
+    }
+}
+
+pub struct CmpHandler;
+impl CommandHandler for CmpHandler {
+    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+        let y = vm.pop()?;
+        let x = vm.pop()?;
+        if x < y {
+            vm.push(-1)?;
+        } else if x > y {
+            vm.push(1)?;
+        } else {
+            vm.push(0)?;
+        }
         Ok(None)
     }
 }
