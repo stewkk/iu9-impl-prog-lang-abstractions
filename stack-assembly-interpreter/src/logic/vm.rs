@@ -33,13 +33,24 @@ mod tests {
     use super::*;
 
     #[test]
+    fn halt_returns_error_code() {
+        let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD HALT".to_string()}];
+        let instructions = assembly::assembly(files).unwrap();
+        let vm = VM::new(instructions);
+
+        let rc = execute(vm).unwrap();
+
+        assert_eq!(rc, 5)
+    }
+
+    #[test]
     fn executes_simple_program() {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD 0 HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
 
-        execute(vm).unwrap();
+        let rc = execute(vm).unwrap();
 
-        // TODO: asserts
+        assert_eq!(rc, 0)
     }
 }
