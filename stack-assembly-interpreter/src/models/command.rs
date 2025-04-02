@@ -23,11 +23,11 @@ pub trait CommandHandler {
 }
 
 pub trait Input {
-    fn get_char(&self) -> i64;
+    fn get_char(&self) -> Result<i64>;
 }
 
 pub trait Output {
-    fn print_char(&self, c: i64);
+    fn print_char(&self, c: i64) -> Result<()>;
 }
 
 pub trait InputOutput: Input + Output {}

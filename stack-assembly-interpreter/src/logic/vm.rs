@@ -7,7 +7,7 @@ use super::command::get_handler;
 
 // NOTE: it's easier here to use a crate that can create mock of struct
 pub struct Executor<'a, IO: Input + Output> {
-    io: &'a IO,
+    pub io: &'a IO,
 }
 
 impl<'a, IO: Input + Output> Executor<'a, IO> {
@@ -75,16 +75,16 @@ mod tests {
 
         let got = executor.execute(vm);
 
-        assert_eq!(got.unwrap_err().to_string(), "invalid memory read at 1000000")
+        assert_eq!(got.unwrap_err().to_string(), "failed to read value from stack")
     }
 
     mock! {
         InputOutput {}
         impl Input for InputOutput {
-            fn get_char(&self) -> i64;
+            fn get_char(&self) -> Result<i64>;
         }
         impl Output for InputOutput {
-            fn print_char(&self, c: i64);
+            fn print_char(&self, c: i64) -> Result<()>;
         }
     }
 
@@ -94,7 +94,10 @@ mod tests {
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
         let mut io = MockInputOutput::new();
-        io.expect_print_char().once().with(predicate::eq(5)).return_const(());
+
+        io.expect_print_char()
+          .with(predicate::eq(5))
+          .return_once(|_| Ok(()));
 
         let executor = Executor{io: &io};
         let _ = executor.execute(vm).unwrap();

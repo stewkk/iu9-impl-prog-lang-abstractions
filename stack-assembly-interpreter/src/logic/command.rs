@@ -60,7 +60,7 @@ pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
 
 pub struct AddHandler;
 impl CommandHandler for AddHandler {
-    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let y = vm.pop()?;
         let x = vm.pop()?;
         vm.push(x+y)?;
@@ -70,7 +70,7 @@ impl CommandHandler for AddHandler {
 
 pub struct SubHandler;
 impl CommandHandler for SubHandler {
-    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let y = vm.pop()?;
         let x = vm.pop()?;
         vm.push(x-y)?;
@@ -80,7 +80,7 @@ impl CommandHandler for SubHandler {
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
-    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let rc = vm.pop()?;
         Ok(Some(rc))
     }
@@ -90,7 +90,7 @@ pub struct OutHandler;
 impl CommandHandler for OutHandler {
     fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let a = vm.pop()?;
-        io.print_char(a);
+        io.print_char(a)?;
         Ok(None)
     }
 }

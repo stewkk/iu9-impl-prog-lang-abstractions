@@ -93,7 +93,7 @@ impl VM {
     }
 
     pub fn pop(&mut self) -> Result<i64> {
-        let res = self.read_memory(self.registers.sp)?;
+        let res = self.read_stack(0)?;
         self.registers.sp += 1;
         Ok(res)
     }
