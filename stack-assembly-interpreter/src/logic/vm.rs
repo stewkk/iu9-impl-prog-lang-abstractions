@@ -2,8 +2,20 @@ use anyhow::Result;
 
 use crate::models::vm::VM;
 
-pub fn execute(vm: VM) -> Result<()> {
-    Ok(())
+use super::command::get_handler;
+
+pub fn execute(mut vm: VM) -> Result<()> {
+    execute_step(&mut vm)
+}
+
+fn execute_step(vm: &mut VM) -> Result<()> {
+    let ip = vm.registers().ip;
+    let opcode = vm.read_memory(ip)?;
+    vm.registers_mut().ip += 1;
+    match opcode {
+        0.. => vm.push(opcode),
+        ..=-1 => get_handler(opcode)?.handle(vm),
+    }
 }
 
 #[cfg(test)]

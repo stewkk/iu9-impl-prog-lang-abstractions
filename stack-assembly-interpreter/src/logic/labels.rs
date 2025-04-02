@@ -13,7 +13,7 @@ fn get_default_labels() -> HashMap<&'static str, Opcode> {
                 |(i, cmd_opt)| cmd_opt.as_ref()
                                       .map(
                                           |cmd| cmd.mnemonics.iter()
-                                                             .map(|mnemonic| (*mnemonic, -(i as Opcode)))
+                                                             .map(|mnemonic| (*mnemonic, -(i as Opcode + 1)))
                                                              .collect::<Vec<_>>()
                                       )
             )
