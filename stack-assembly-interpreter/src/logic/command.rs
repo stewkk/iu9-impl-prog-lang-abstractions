@@ -28,6 +28,19 @@ macro_rules! get_register_handler {
     };
 }
 
+macro_rules! set_register_handler {
+    ( $handler:ident, $register:ident ) => {
+        pub struct $handler;
+        impl CommandHandler for $handler {
+            fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+                let a = vm.pop()?;
+                vm.registers_mut().$register = a;
+                Ok(None)
+            }
+        }
+    };
+}
+
 pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
     Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
@@ -41,14 +54,10 @@ pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["GETSP"], handler: &GetSPHandler{}}),
     Some(Command{mnemonics: &["GETFP"], handler: &GetFPHandler{}}),
     Some(Command{mnemonics: &["GETRV"], handler: &GetRVHandler{}}),
-    // Some(Command{mnemonics: &["SETIP"], handler: &SetIPHandler{}}),
-    // Some(Command{mnemonics: &["SETSP"], handler: &SetSPHandler{}}),
-    // Some(Command{mnemonics: &["SETFP"], handler: &SetFPHandler{}}),
-    // Some(Command{mnemonics: &["SETRV"], handler: &SetRVHandler{}}),
-    None,
-    None,
-    None,
-    None,
+    Some(Command{mnemonics: &["SETIP"], handler: &SetIPHandler{}}),
+    Some(Command{mnemonics: &["SETSP"], handler: &SetSPHandler{}}),
+    Some(Command{mnemonics: &["SETFP"], handler: &SetFPHandler{}}),
+    Some(Command{mnemonics: &["SETRV"], handler: &SetRVHandler{}}),
     None,
     None,
     None,
@@ -100,6 +109,11 @@ get_register_handler!(GetIPHandler, ip);
 get_register_handler!(GetFPHandler, fp);
 get_register_handler!(GetSPHandler, sp);
 get_register_handler!(GetRVHandler, rv);
+
+set_register_handler!(SetIPHandler, ip);
+set_register_handler!(SetFPHandler, fp);
+set_register_handler!(SetSPHandler, sp);
+set_register_handler!(SetRVHandler, rv);
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
