@@ -19,6 +19,16 @@ pub struct Command<'a> {
 pub type ReturnCode = i64;
 
 pub trait CommandHandler {
-    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>>;
+    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>>;
 }
 
+pub trait Input {
+    fn get_char(&self) -> i64;
+}
+
+pub trait Output {
+    fn print_char(&self, c: i64);
+}
+
+pub trait InputOutput: Input + Output {}
+impl<T: Input + Output> InputOutput for T {}

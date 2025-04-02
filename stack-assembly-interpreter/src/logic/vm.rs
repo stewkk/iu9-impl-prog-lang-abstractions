@@ -1,10 +1,11 @@
 use anyhow::Result;
 
 use crate::models::vm::VM;
-use crate::models::command::ReturnCode;
+use crate::models::command::{Input, Output, ReturnCode};
 
 use super::command::get_handler;
 
+// NOTE: it's easier here to use a crate that can create mock of struct
 pub struct Executor<'a, IO: Input + Output> {
     io: &'a IO,
 }
@@ -27,21 +28,15 @@ impl<'a, IO: Input + Output> Executor<'a, IO> {
                 vm.push(opcode)?;
                 Ok(None)
             },
-            ..=-1 => get_handler(opcode)?.handle(vm)
+            ..=-1 => get_handler(opcode)?.handle(vm, self.io)
         }
     }
 }
 
-pub trait Input {
-    fn get_char(&self) -> i64;
-}
-
-pub trait Output {
-    fn print_char(c: i64);
-}
-
 #[cfg(test)]
 mod tests {
+    use mockall::{mock, predicate};
+
     use crate::logic::{assembly::{self, TextFile}, stdio::Stdio};
 
     use super::*;
@@ -52,9 +47,7 @@ mod tests {
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
         let io = &Stdio{};
-        let executor = Executor{io};
-
-        let rc = executor.execute(vm).unwrap();
+        let executor = Executor{io}; let rc = executor.execute(vm).unwrap();
 
         assert_eq!(rc, 5)
     }
@@ -85,16 +78,25 @@ mod tests {
         assert_eq!(got.unwrap_err().to_string(), "invalid memory read at 1000000")
     }
 
+    mock! {
+        InputOutput {}
+        impl Input for InputOutput {
+            fn get_char(&self) -> i64;
+        }
+        impl Output for InputOutput {
+            fn print_char(&self, c: i64);
+        }
+    }
+
     #[test]
     fn out_instruction_outputs_symbol() {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD OUT 0 HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
-        let io = &Stdio{};
-        let executor = Executor{io};
+        let mut io = MockInputOutput::new();
+        io.expect_print_char().once().with(predicate::eq(5)).return_const(());
 
+        let executor = Executor{io: &io};
         let _ = executor.execute(vm).unwrap();
-
-
     }
 }

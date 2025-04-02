@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 
-use crate::models::{command::{Command, CommandHandler, Opcode, ReturnCode}, vm::VM};
+use crate::models::{command::{Command, CommandHandler, InputOutput, Opcode, ReturnCode}, vm::VM};
 
 pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
@@ -60,7 +60,7 @@ pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
 
 pub struct AddHandler;
 impl CommandHandler for AddHandler {
-    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let y = vm.pop()?;
         let x = vm.pop()?;
         vm.push(x+y)?;
@@ -70,7 +70,7 @@ impl CommandHandler for AddHandler {
 
 pub struct SubHandler;
 impl CommandHandler for SubHandler {
-    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let y = vm.pop()?;
         let x = vm.pop()?;
         vm.push(x-y)?;
@@ -80,7 +80,7 @@ impl CommandHandler for SubHandler {
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
-    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
         let rc = vm.pop()?;
         Ok(Some(rc))
     }
@@ -88,14 +88,16 @@ impl CommandHandler for HaltHandler {
 
 pub struct OutHandler;
 impl CommandHandler for OutHandler {
-    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+        let a = vm.pop()?;
+        io.print_char(a);
         Ok(None)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::models::{command::Instruction, token::{Position, Token}, vm::VM};
+    use crate::{logic::stdio::Stdio, models::{command::Instruction, token::{Position, Token}, vm::VM}};
 
     use super::*;
 
@@ -113,7 +115,7 @@ mod tests {
         vm.push(2).unwrap();
         vm.push(3).unwrap();
 
-        AddHandler{}.handle(&mut vm).unwrap();
+        AddHandler{}.handle(&mut vm, &Stdio{}).unwrap();
 
         assert_eq!(vm.read_stack(0).unwrap(), 5)
     }

@@ -1,4 +1,4 @@
-use super::vm::{Input, Output};
+use crate::models::command::{Input, Output};
 
 pub struct Stdio;
 
@@ -9,7 +9,7 @@ impl Input for Stdio {
 }
 
 impl Output for Stdio {
-    fn print_char(c: i64) {
+    fn print_char(&self, c: i64) {
         todo!()
     }
 }
