@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 
 use crate::models::{command::{Command, CommandHandler, Opcode, ReturnCode}, vm::VM};
 
-pub const COMMANDS: [Option<Command>; 37] = [
+pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
     Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
     None,
@@ -40,6 +40,13 @@ pub const COMMANDS: [Option<Command>; 37] = [
     None,
     None,
     Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some(Command{mnemonics: &["OUT"], handler: &OutHandler{}}),
 ];
 
 pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
@@ -76,6 +83,13 @@ impl CommandHandler for HaltHandler {
     fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
         let rc = vm.pop()?;
         Ok(Some(rc))
+    }
+}
+
+pub struct OutHandler;
+impl CommandHandler for OutHandler {
+    fn handle(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+        Ok(None)
     }
 }
 

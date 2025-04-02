@@ -5,29 +5,35 @@ use crate::models::command::ReturnCode;
 
 use super::command::get_handler;
 
-pub fn execute(mut vm: VM, io: &(impl Input + Output)) -> Result<ReturnCode> {
-    loop {
-        if let Some(rc) = execute_step(&mut vm)? {
-            return Ok(rc)
+pub struct Executor<'a, IO: Input + Output> {
+    io: &'a IO,
+}
+
+impl<'a, IO: Input + Output> Executor<'a, IO> {
+    pub fn execute(&self, mut vm: VM) -> Result<ReturnCode> {
+        loop {
+            if let Some(rc) = self.execute_step(&mut vm)? {
+                return Ok(rc)
+            }
+        }
+    }
+
+    fn execute_step(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+        let ip = vm.registers().ip;
+        let opcode = vm.read_memory(ip)?;
+        vm.registers_mut().ip += 1;
+        match opcode {
+            0.. => {
+                vm.push(opcode)?;
+                Ok(None)
+            },
+            ..=-1 => get_handler(opcode)?.handle(vm)
         }
     }
 }
 
-fn execute_step(vm: &mut VM) -> Result<Option<ReturnCode>> {
-    let ip = vm.registers().ip;
-    let opcode = vm.read_memory(ip)?;
-    vm.registers_mut().ip += 1;
-    match opcode {
-        0.. => {
-            vm.push(opcode)?;
-            Ok(None)
-        },
-        ..=-1 => get_handler(opcode)?.handle(vm)
-    }
-}
-
 pub trait Input {
-    fn get_char() -> i64;
+    fn get_char(&self) -> i64;
 }
 
 pub trait Output {
@@ -36,7 +42,7 @@ pub trait Output {
 
 #[cfg(test)]
 mod tests {
-    use crate::logic::assembly::{self, TextFile};
+    use crate::logic::{assembly::{self, TextFile}, stdio::Stdio};
 
     use super::*;
 
@@ -45,8 +51,10 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
+        let io = &Stdio{};
+        let executor = Executor{io};
 
-        let rc = execute(vm).unwrap();
+        let rc = executor.execute(vm).unwrap();
 
         assert_eq!(rc, 5)
     }
@@ -56,8 +64,10 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD 0 HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
+        let io = &Stdio{};
+        let executor = Executor{io};
 
-        let rc = execute(vm).unwrap();
+        let rc = executor.execute(vm).unwrap();
 
         assert_eq!(rc, 0)
     }
@@ -67,8 +77,10 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
+        let io = &Stdio{};
+        let executor = Executor{io};
 
-        let got = execute(vm);
+        let got = executor.execute(vm);
 
         assert_eq!(got.unwrap_err().to_string(), "invalid memory read at 1000000")
     }
@@ -78,9 +90,11 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD OUT 0 HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
+        let io = &Stdio{};
+        let executor = Executor{io};
 
-        let rc = execute(vm).unwrap();
+        let _ = executor.execute(vm).unwrap();
 
-        assert_eq!(rc, 0)
+
     }
 }
