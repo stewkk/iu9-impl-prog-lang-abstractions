@@ -18,6 +18,11 @@ pub struct VM {
     code: Vec<Instruction>,
 }
 
+enum InternalAddress {
+    Code(usize),
+    Memory(usize),
+}
+
 impl VM {
     const MEM_SIZE: i64 = 1000*1000;
     const BANNED_SIZE: usize = 256;
@@ -45,33 +50,36 @@ impl VM {
         &mut self.registers
     }
 
-    // TODO: refactor duplicate code
+    fn get_internal_address(&self, i: i64) -> Result<InternalAddress> {
+        if i < Self::BANNED_SIZE as i64 {
+            bail!("address range [-inf, 256) is forbidden to access")
+        }
+        let actual = usize::try_from(i)? - 256;
+        if actual < self.code.len() {
+            return Ok(InternalAddress::Code(actual))
+        }
+        let actual = actual - self.code.len();
+        Ok(InternalAddress::Memory(actual))
+    }
+
     pub fn read_memory(&self, i: i64) -> Result<i64> {
         (|| {
-            if i < Self::BANNED_SIZE as i64 {
-                bail!("addresses [-inf, 256) are banned");
+            match self.get_internal_address(i)? {
+                InternalAddress::Code(internal) => Ok(self.code[internal].opcode),
+                InternalAddress::Memory(internal) => self.memory.get(internal)
+                                                                .copied()
+                                                                .ok_or_else(|| anyhow!("address too big")),
             }
-            let actual = usize::try_from(i)? - 256;
-            if actual < self.code.len() {
-                return Ok(self.code[actual].opcode);
-            }
-            let actual = actual - self.code.len();
-            self.memory.get(actual).copied().ok_or_else(|| anyhow!("address too big"))
         })().context(anyhow!("invalid memory read at {i}"))
     }
 
     pub fn write_memory(&mut self, i: i64, data: i64) -> Result<()> {
         (|| {
-            if i < Self::BANNED_SIZE as i64 {
-                bail!("addresses [-inf, 256) are banned");
+            match self.get_internal_address(i)? {
+                InternalAddress::Code(_) => bail!("attempt to write at code segment"),
+                InternalAddress::Memory(internal) =>
+                    Ok(*self.memory.get_mut(internal).ok_or_else(|| anyhow!("address too big"))? = data),
             }
-            let actual = usize::try_from(i)? - 256;
-            if actual < self.code.len() {
-                bail!("attempt to write at code segment")
-            }
-            let actual = actual - self.code.len();
-            *self.memory.get_mut(actual).ok_or_else(|| anyhow!("address too big"))? = data;
-            Ok(())
         })().context(anyhow!("invalid memory write at {i}"))
     }
 
