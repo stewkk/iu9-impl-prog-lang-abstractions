@@ -1,14 +1,13 @@
 use anyhow::Result;
 
-use std::{env, process::exit};
+use std::{env, process::ExitCode};
 
 use stack_assembly_interpreter::run;
 
-fn main() -> Result<()> {
+fn main() -> Result<ExitCode> {
     let args: Vec<String> = env::args().collect();
     let file_paths = &args[1..];
 
     let rc = run(&file_paths)?;
-    exit(rc.try_into()?)
+    Ok(ExitCode::from(u8::try_from(rc)?))
 }
-
