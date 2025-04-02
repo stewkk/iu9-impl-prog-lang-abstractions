@@ -2,15 +2,53 @@ use anyhow::{anyhow, Result};
 
 use crate::models::{command::{Command, CommandHandler, Opcode}, vm::VM};
 
-pub const COMMANDS: [Option<Command>; 2] = [
+pub const COMMANDS: [Option<Command>; 37] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
     Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
 ];
 
 pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
     let index = opcode as usize - 1;
-    let handler_opt = COMMANDS.get(index).ok_or(anyhow!("no hanlder for opcode {opcode}"))?;
-    handler_opt.as_ref().map_or_else(|| Err(anyhow!("no handler for opcode {opcode}")), |x| Ok(x.handler))
+    COMMANDS.get(index)
+            .map(Option::as_ref)
+            .flatten()
+            .ok_or_else(|| anyhow!("no handler for opcode {opcode}"))
+            .map(|x| x.handler)
 }
 
 pub struct AddHandler;
@@ -28,6 +66,13 @@ impl CommandHandler for SubHandler {
         let y = vm.pop()?;
         let x = vm.pop()?;
         vm.push(x-y)
+    }
+}
+
+pub struct HaltHandler;
+impl CommandHandler for HaltHandler {
+    fn handle(&self, vm: &mut VM) -> Result<()> {
+        Ok(())
     }
 }
 
