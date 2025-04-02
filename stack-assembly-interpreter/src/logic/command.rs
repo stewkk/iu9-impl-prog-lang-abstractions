@@ -11,16 +11,18 @@ pub const COMMANDS: [Option<Command>; 3] = [
 pub struct AddHandler;
 impl CommandHandler for AddHandler {
     fn handle(&self, vm: &mut VM) -> Result<()> {
-        let a = vm.pop()?;
-        let b = vm.pop()?;
-        vm.push(a+b)
+        let y = vm.pop()?;
+        let x = vm.pop()?;
+        vm.push(x+y)
     }
 }
 
 pub struct SubHandler;
 impl CommandHandler for SubHandler {
     fn handle(&self, vm: &mut VM) -> Result<()> {
-        todo!()
+        let y = vm.pop()?;
+        let x = vm.pop()?;
+        vm.push(x-y)
     }
 }
 
