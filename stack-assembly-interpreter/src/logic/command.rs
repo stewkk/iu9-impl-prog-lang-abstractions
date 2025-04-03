@@ -15,17 +15,17 @@ pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["GETSP"], handler: &GetSPHandler{}}),
     Some(Command{mnemonics: &["GETFP"], handler: &GetFPHandler{}}),
     Some(Command{mnemonics: &["GETRV"], handler: &GetRVHandler{}}),
-    Some(Command{mnemonics: &["SETIP"], handler: &SetIPHandler{}}),
+    Some(Command{mnemonics: &["SETIP", "JMP", "RET"], handler: &SetIPHandler{}}),
     Some(Command{mnemonics: &["SETSP"], handler: &SetSPHandler{}}),
     Some(Command{mnemonics: &["SETFP"], handler: &SetFPHandler{}}),
     Some(Command{mnemonics: &["SETRV"], handler: &SetRVHandler{}}),
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
+    Some(Command{mnemonics: &["RET2"], handler: &Ret2Handler{}}),
+    Some(Command{mnemonics: &["JGE"], handler: &JgeHandler{}}),
+    Some(Command{mnemonics: &["JNE"], handler: &JneHandler{}}),
+    Some(Command{mnemonics: &["JGT"], handler: &JgtHandler{}}),
+    Some(Command{mnemonics: &["JLE"], handler: &JleHandler{}}),
+    Some(Command{mnemonics: &["JEQ"], handler: &JeqHandler{}}),
+    Some(Command{mnemonics: &["JLT"], handler: &JltHandler{}}),
     Some(Command{mnemonics: &["DROP2"], handler: &Drop2Handler{}}),
     Some(Command{mnemonics: &["DUP"], handler: &DupHandler{}}),
     Some(Command{mnemonics: &["DROP"], handler: &DropHandler{}}),
@@ -33,7 +33,7 @@ pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["ROT"], handler: &RotHandler{}}),
     Some(Command{mnemonics: &["OVER"], handler: &OverHandler{}}),
     Some(Command{mnemonics: &["SDROP"], handler: &SdropHandler{}}),
-    None,
+    Some(Command{mnemonics: &["CALL"], handler: &CallHandler{}}),
     None,
     Some(Command{mnemonics: &["NEG"], handler: &NegHandler{}}),
     Some(Command{mnemonics: &["BITNOT"], handler: &BitwiseNotHandler{}}),
@@ -118,6 +118,21 @@ macro_rules! unary_op_handler {
     };
 }
 
+macro_rules! conditional_jump_handler {
+    ( $handler:ident, $body:ident, $cond:tt ) => {
+        fn $body(vm: &mut VM) -> Result<()> {
+            let a = vm.pop()?;
+            let x = vm.pop()?;
+            if x $cond 0 {
+                vm.registers_mut().ip = a;
+            }
+            Ok(())
+        }
+
+        handler!($handler, $body);
+    };
+}
+
 bin_op_handler!(AddHandler, add_handler_body, +);
 bin_op_handler!(SubHandler, sub_handler_body, -);
 bin_op_handler!(BitwiseAndHandler, bitwise_and_handler_body, &);
@@ -141,6 +156,13 @@ set_register_handler!(SetIPHandler, set_ip_handler_body, ip);
 set_register_handler!(SetFPHandler, set_fp_handler_body, fp);
 set_register_handler!(SetSPHandler, set_sp_handler_body, sp);
 set_register_handler!(SetRVHandler, set_rv_handler_body, rv);
+
+conditional_jump_handler!(JltHandler, jlt_handler_body, <);
+conditional_jump_handler!(JgtHandler, jgt_handler_body, >);
+conditional_jump_handler!(JeqHandler, jeq_handler_body, ==);
+conditional_jump_handler!(JleHandler, jle_handler_body, <=);
+conditional_jump_handler!(JgeHandler, jge_handler_body, >=);
+conditional_jump_handler!(JneHandler, jne_handler_body, !=);
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
@@ -257,6 +279,23 @@ fn save_handler_body(vm: &mut VM) -> Result<()> {
     Ok(())
 }
 handler!(SaveHandler, save_handler_body);
+
+fn call_handler_body(vm: &mut VM) -> Result<()> {
+    let address = vm.pop()?;
+    let ip = vm.registers().ip;
+    vm.push(ip)?;
+    vm.registers_mut().ip = address;
+    Ok(())
+}
+handler!(CallHandler, call_handler_body);
+
+fn ret2_handler_body(vm: &mut VM) -> Result<()> {
+    let address = vm.pop()?;
+    let _ = vm.pop()?;
+    vm.registers_mut().ip = address;
+    Ok(())
+}
+handler!(Ret2Handler, ret2_handler_body);
 
 #[cfg(test)]
 mod tests {
