@@ -44,7 +44,6 @@ pub fn assembly(files: &[TextFile]) -> Result<Vec<Instruction>> {
 mod tests {
     use super::*;
 
-    #[ignore="not implemented"]
     #[test]
     fn translates_assembly_into_opcodes() {
         let text = String::from("10 +65 -40 :_  ; _ == 259
@@ -61,7 +60,6 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
         assert_eq!(got, vec![10, 65, -40, 268, -37, 268, 268, 259, 260, 123, 1234, 268]);
     }
 
-    #[ignore="not implemented"]
     #[test]
     fn translates_hello_world() {
         let text = String::from("72 OUT 101 OUT 108 OUT 108 OUT 111 OUT 33 OUT 0 HALT");
