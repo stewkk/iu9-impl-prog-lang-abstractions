@@ -4,12 +4,13 @@ mod models;
 use std::fs;
 
 use anyhow::{Context, Result};
+use beau_collector::BeauCollector as _;
 
 use logic::{assembly::{self, TextFile}, stdio::Stdio, vm::Executor};
 use models::{command::ReturnCode, vm::VM};
 
 pub fn run(file_paths: &[String]) -> Result<ReturnCode> {
-    let files: Result<Vec<TextFile>> = file_paths.into_iter()
+    let files = file_paths.into_iter()
                              .map(|path| -> Result<_> {
                                  Ok(TextFile{
                                      name: path.to_string(),
@@ -17,7 +18,7 @@ pub fn run(file_paths: &[String]) -> Result<ReturnCode> {
                                          .context(format!("failed to read file: {path}"))?
                                  })
                              })
-                             .collect();
+                             .bcollect::<Vec<_>>();
 
     let instructions = assembly::assembly(&files?)?;
 

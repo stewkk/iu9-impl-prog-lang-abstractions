@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use anyhow::{anyhow, Result};
+use beau_collector::BeauCollector as _;
 
 use crate::models::token::Token;
 use crate::models::command::{Opcode, Instruction};
@@ -21,7 +22,7 @@ fn generate_instructions(tokens: &[Token], labels: HashMap<&str, Opcode>) -> Res
             Token::Integer(i, _) => Ok(Instruction{opcode: *i, token: x.clone()}),
             Token::Declaration(_, pos) => Err(anyhow!("{pos}: didn't expect declaration here")),
           })
-          .collect()
+          .bcollect()
 }
 
 pub struct TextFile {
@@ -32,7 +33,7 @@ pub struct TextFile {
 pub fn assembly(files: &[TextFile]) -> Result<Vec<Instruction>> {
     let tokens_by_file: Result<Vec<Vec<Token>>> = files.iter()
                                                        .map(|file| tokenize::tokenize(&file.text, &file.name))
-                                                       .collect();
+                                                       .bcollect::<Vec<_>>();
     let tokens: Vec<Token> = tokens_by_file?.into_iter()
                                             .flatten()
                                             .collect();

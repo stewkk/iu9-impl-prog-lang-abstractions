@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result, Context, Error};
 use once_cell::unsync::Lazy;
 use regex::Regex;
+use beau_collector::BeauCollector as _;
 
 use crate::models::token::Token;
 use crate::models::token::Position;
@@ -34,7 +35,7 @@ pub fn tokenize(text: &str, filename: &str) -> Result<Vec<Token>> {
         (i+1, line.split(&[' ', '\t']))
     });
 
-    let mut res: Vec<Token> = vec![];
+    let mut res: Vec<Result<Token>> = vec![];
     for line in lines {
         let (i, tokens) = line;
         let mut column: usize = 1;
@@ -43,12 +44,12 @@ pub fn tokenize(text: &str, filename: &str) -> Result<Vec<Token>> {
                 column += 1;
                 continue;
             }
-            res.push(get_token(token, Position{filename: filename.to_string(), line: i, column})?);
+            res.push(get_token(token, Position{filename: filename.to_string(), line: i, column}));
             column += token.len()+1;
         }
     }
 
-    Ok(res)
+    res.into_iter().bcollect()
 }
 
 #[cfg(test)]

@@ -1,6 +1,8 @@
+use std::borrow::Borrow;
 use std::collections::HashMap;
 
-use anyhow::{bail, Result};
+use anyhow::{anyhow, Result};
+use beau_collector::BeauCollector;
 
 use super::command::COMMANDS;
 use crate::models::token::Token;
@@ -24,16 +26,18 @@ fn get_default_labels() -> HashMap<&'static str, Opcode> {
 pub fn get_labels<'a>(tokens: &'a [Token]) -> Result<HashMap<&'a str, Opcode>> {
     let mut current = 256;
     let mut labels = get_default_labels();
+    let mut errors: Vec<Result<()>> = vec![];
     for token in tokens {
         if let Token::Declaration(decl, pos) = token {
             if let Some(_) = labels.insert(decl, current) {
-                bail!("{pos}: label declared twice: {decl}");
+                errors.push(Err(anyhow!("{pos}: label declared twice: {decl}")));
             }
         } else {
             current += 1;
         }
     }
     labels.insert("PROGRAM_SIZE", current);
+    errors.into_iter().bcollect()?;
     Ok(labels)
 }
 

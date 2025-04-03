@@ -275,7 +275,7 @@ handler!(LoadHandler, load_handler_body);
 fn save_handler_body(vm: &mut VM) -> Result<()> {
     let value = vm.pop()?;
     let address = vm.pop()?;
-    vm.write_memory(address, value)?;
+    vm.write_memory(address, Some(value))?;
     Ok(())
 }
 handler!(SaveHandler, save_handler_body);

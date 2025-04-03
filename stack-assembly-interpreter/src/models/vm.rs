@@ -10,7 +10,7 @@ pub struct Registers {
     pub rv: i64,
 }
 
-pub type Memory = Vec<i64>;
+pub type Memory = Vec<Option<i64>>;
 
 pub struct VM {
     registers: Registers,
@@ -30,7 +30,7 @@ impl VM {
     pub fn new(code: Vec<Instruction>) -> Self {
         let actual_memory_size = (Self::MEM_SIZE as usize)-code.len()-Self::BANNED_SIZE;
         let res = Self {
-            memory: vec![0; actual_memory_size],
+            memory: vec![None; actual_memory_size],
             registers: Registers{
                 ip: 256,
                 sp: Self::MEM_SIZE,
@@ -68,12 +68,13 @@ impl VM {
                 InternalAddress::Code(internal) => Ok(self.code[internal].opcode),
                 InternalAddress::Memory(internal) => self.memory.get(internal)
                                                                 .copied()
-                                                                .ok_or_else(|| anyhow!("address too big")),
+                                                                .ok_or_else(|| anyhow!("address too big"))?
+                                                                .ok_or_else(|| anyhow!("trying to read uninitialized memory")),
             }
         })().context(anyhow!("invalid memory read at {i}"))
     }
 
-    pub fn write_memory(&mut self, i: i64, data: i64) -> Result<()> {
+    pub fn write_memory(&mut self, i: i64, data: Option<i64>) -> Result<()> {
         (|| {
             match self.get_internal_address(i)? {
                 InternalAddress::Code(_) => bail!("attempt to write at code segment"),
@@ -96,11 +97,12 @@ impl VM {
 
     pub fn push(&mut self, data: i64) -> Result<()> {
         self.registers.sp -= 1;
-        self.write_memory(self.registers.sp, data).context("failed to push value on stack")
+        self.write_memory(self.registers.sp, Some(data)).context("failed to push value on stack")
     }
 
     pub fn pop(&mut self) -> Result<i64> {
         let res = self.read_stack(0)?;
+        self.write_memory(self.registers.sp, None)?;
         self.registers.sp += 1;
         Ok(res)
     }
