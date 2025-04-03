@@ -87,6 +87,13 @@ impl VM {
         self.read_memory(self.registers.sp + offset).context("failed to read value from stack")
     }
 
+    pub fn read_code(&self, i: i64) -> Result<&Instruction> {
+        match self.get_internal_address(i).context(format!("failed to read code segment at {i}"))? {
+            InternalAddress::Code(internal) => Ok(&self.code[internal]),
+            _ => Err(anyhow!("can't read instruction from memory segment at {i}"))
+        }
+    }
+
     pub fn push(&mut self, data: i64) -> Result<()> {
         self.registers.sp -= 1;
         self.write_memory(self.registers.sp, data).context("failed to push value on stack")

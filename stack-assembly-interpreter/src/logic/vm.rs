@@ -1,7 +1,8 @@
-use anyhow::Result;
+use anyhow::{anyhow, Context, Result, Error};
 
+use crate::models::token::Token;
 use crate::models::vm::VM;
-use crate::models::command::{Input, Output, ReturnCode};
+use crate::models::command::{Input, Instruction, Output, ReturnCode};
 
 use super::command::get_handler;
 
@@ -21,15 +22,24 @@ impl<'a, IO: Input + Output> Executor<'a, IO> {
 
     fn execute_step(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
         let ip = vm.registers().ip;
-        let opcode = vm.read_memory(ip)?;
+        let instruction = vm.read_code(ip)?.clone();
+        let opcode = instruction.opcode;
         vm.registers_mut().ip += 1;
-        match opcode {
+        (|| match opcode {
             0.. => {
                 vm.push(opcode)?;
                 Ok(None)
             },
             ..=-1 => get_handler(opcode)?.handle(vm, self.io)
-        }
+        })().context(get_failed_to_execute_error(&instruction))
+    }
+}
+
+fn get_failed_to_execute_error(instruction: &Instruction) -> Error {
+    match &instruction.token {
+        Token::Integer(i, pos) => anyhow!("{pos}: failed to execute integer instruction {i}"),
+        Token::Declaration(i, pos) => anyhow!("{pos}: can't execute declaration {i}"),
+        Token::Ident(i, pos) => anyhow!("{pos}: failed to execute ident instruction {i}"),
     }
 }
 
@@ -75,7 +85,7 @@ mod tests {
 
         let got = executor.execute(vm);
 
-        assert_eq!(got.unwrap_err().to_string(), "failed to read value from stack")
+        assert_eq!(got.unwrap_err().to_string(), "stdin:1:1: failed to execute ident instruction HALT")
     }
 
     mock! {

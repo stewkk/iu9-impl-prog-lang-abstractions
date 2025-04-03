@@ -5,7 +5,7 @@ use super::vm::VM;
 
 pub type Opcode = i64;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Instruction {
     pub opcode: Opcode,
     pub token: Token,
