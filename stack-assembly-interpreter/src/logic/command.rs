@@ -50,6 +50,18 @@ macro_rules! set_register_handler {
     };
 }
 
+macro_rules! unary_op_handler {
+    ( $handler:ident, $body:ident, $op:tt ) => {
+        fn $body(vm: &mut VM) -> Result<()> {
+            let x = vm.pop()?;
+            vm.push($op x)?;
+            Ok(())
+        }
+
+        handler!($handler, $body);
+    };
+}
+
 pub const COMMANDS: [Option<Command>; 44] = [
     Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
     Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
@@ -74,17 +86,17 @@ pub const COMMANDS: [Option<Command>; 44] = [
     None,
     None,
     None,
+    Some(Command{mnemonics: &["DROP2"], handler: &Drop2Handler{}}),
+    Some(Command{mnemonics: &["DUP"], handler: &DupHandler{}}),
+    Some(Command{mnemonics: &["DROP"], handler: &DropHandler{}}),
+    Some(Command{mnemonics: &["SWAP"], handler: &SwapHandler{}}),
+    Some(Command{mnemonics: &["ROT"], handler: &RotHandler{}}),
+    Some(Command{mnemonics: &["OVER"], handler: &OverHandler{}}),
+    Some(Command{mnemonics: &["SDROP"], handler: &SdropHandler{}}),
     None,
     None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
+    Some(Command{mnemonics: &["NEG"], handler: &NegHandler{}}),
+    Some(Command{mnemonics: &["BITNOT"], handler: &BitwiseNotHandler{}}),
     None,
     None,
     Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
@@ -116,6 +128,9 @@ bin_op_handler!(RightShiftHandler, right_shift_handler_body, >>);
 bin_op_handler!(MulHandler, mul_handler_body, *);
 bin_op_handler!(DivHandler, div_handler_body, /);
 bin_op_handler!(ModHandler, mod_handler_body, %);
+
+unary_op_handler!(NegHandler, neg_handler_body, -);
+unary_op_handler!(BitwiseNotHandler, bitwise_not_handler_body, !);
 
 get_register_handler!(GetIPHandler, get_ip_handler_body, ip);
 get_register_handler!(GetFPHandler, get_fp_handler_body, fp);
@@ -159,6 +174,65 @@ impl CommandHandler for CmpHandler {
         Ok(None)
     }
 }
+
+fn dup_handler_body(vm: &mut VM) -> Result<()> {
+    let x = vm.pop()?;
+    vm.push(x)?;
+    vm.push(x)?;
+    Ok(())
+}
+handler!(DupHandler, dup_handler_body);
+
+fn drop_handler_body(vm: &mut VM) -> Result<()> {
+    let _ = vm.pop()?;
+    Ok(())
+}
+handler!(DropHandler, drop_handler_body);
+
+fn swap_handler_body(vm: &mut VM) -> Result<()> {
+    let y = vm.pop()?;
+    let x = vm.pop()?;
+    vm.push(y)?;
+    vm.push(x)?;
+    Ok(())
+}
+handler!(SwapHandler, swap_handler_body);
+
+fn rot_handler_body(vm: &mut VM) -> Result<()> {
+    let z = vm.pop()?;
+    let y = vm.pop()?;
+    let x = vm.pop()?;
+    vm.push(y)?;
+    vm.push(z)?;
+    vm.push(x)?;
+    Ok(())
+}
+handler!(RotHandler, rot_handler_body);
+
+fn over_handler_body(vm: &mut VM) -> Result<()> {
+    let y = vm.pop()?;
+    let x = vm.pop()?;
+    vm.push(x)?;
+    vm.push(y)?;
+    vm.push(x)?;
+    Ok(())
+}
+handler!(OverHandler, over_handler_body);
+
+fn sdrop_handler_body(vm: &mut VM) -> Result<()> {
+    let y = vm.pop()?;
+    let _ = vm.pop()?;
+    vm.push(y)?;
+    Ok(())
+}
+handler!(SdropHandler, sdrop_handler_body);
+
+fn drop2_handler_body(vm: &mut VM) -> Result<()> {
+    let _ = vm.pop()?;
+    let _ = vm.pop()?;
+    Ok(())
+}
+handler!(Drop2Handler, drop2_handler_body);
 
 #[cfg(test)]
 mod tests {
