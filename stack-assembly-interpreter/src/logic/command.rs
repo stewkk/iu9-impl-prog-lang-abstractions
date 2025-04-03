@@ -2,6 +2,62 @@ use anyhow::{anyhow, Result};
 
 use crate::models::{command::{Command, CommandHandler, InputOutput, Opcode, ReturnCode}, vm::VM};
 
+pub const COMMANDS: [Option<Command>; 44] = [
+    Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
+    Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
+    Some(Command{mnemonics: &["BITAND"], handler: &BitwiseAndHandler{}}),
+    Some(Command{mnemonics: &["BITOR"], handler: &BitwiseOrHandler{}}),
+    Some(Command{mnemonics: &["BITXOR"], handler: &BitwiseXorHandler{}}),
+    Some(Command{mnemonics: &["LSHIFT"], handler: &LeftShiftHandler{}}),
+    Some(Command{mnemonics: &["RSHIFT"], handler: &RightShiftHandler{}}),
+    Some(Command{mnemonics: &["CMP"], handler: &CmpHandler{}}),
+    Some(Command{mnemonics: &["GETIP"], handler: &GetIPHandler{}}),
+    Some(Command{mnemonics: &["GETSP"], handler: &GetSPHandler{}}),
+    Some(Command{mnemonics: &["GETFP"], handler: &GetFPHandler{}}),
+    Some(Command{mnemonics: &["GETRV"], handler: &GetRVHandler{}}),
+    Some(Command{mnemonics: &["SETIP"], handler: &SetIPHandler{}}),
+    Some(Command{mnemonics: &["SETSP"], handler: &SetSPHandler{}}),
+    Some(Command{mnemonics: &["SETFP"], handler: &SetFPHandler{}}),
+    Some(Command{mnemonics: &["SETRV"], handler: &SetRVHandler{}}),
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    None,
+    Some(Command{mnemonics: &["DROP2"], handler: &Drop2Handler{}}),
+    Some(Command{mnemonics: &["DUP"], handler: &DupHandler{}}),
+    Some(Command{mnemonics: &["DROP"], handler: &DropHandler{}}),
+    Some(Command{mnemonics: &["SWAP"], handler: &SwapHandler{}}),
+    Some(Command{mnemonics: &["ROT"], handler: &RotHandler{}}),
+    Some(Command{mnemonics: &["OVER"], handler: &OverHandler{}}),
+    Some(Command{mnemonics: &["SDROP"], handler: &SdropHandler{}}),
+    None,
+    None,
+    Some(Command{mnemonics: &["NEG"], handler: &NegHandler{}}),
+    Some(Command{mnemonics: &["BITNOT"], handler: &BitwiseNotHandler{}}),
+    None,
+    None,
+    Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
+    None,
+    None,
+    Some(Command{mnemonics: &["MUL"], handler: &MulHandler{}}),
+    Some(Command{mnemonics: &["DIV"], handler: &DivHandler{}}),
+    Some(Command{mnemonics: &["MOD"], handler: &ModHandler{}}),
+    Some(Command{mnemonics: &["IN"], handler: &InHandler{}}),
+    Some(Command{mnemonics: &["OUT"], handler: &OutHandler{}}),
+];
+
+pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
+    let index = -opcode as usize - 1;
+    COMMANDS.get(index)
+            .map(Option::as_ref)
+            .flatten()
+            .ok_or_else(|| anyhow!("no handler for opcode {opcode}"))
+            .map(|x| x.handler)
+}
+
 macro_rules! handler {
     ( $handler:ident, $body:ident ) => {
         pub struct $handler;
@@ -62,62 +118,6 @@ macro_rules! unary_op_handler {
     };
 }
 
-pub const COMMANDS: [Option<Command>; 44] = [
-    Some(Command{mnemonics: &["ADD"], handler: &AddHandler{}}),
-    Some(Command{mnemonics: &["SUB"], handler: &SubHandler{}}),
-    Some(Command{mnemonics: &["BITAND"], handler: &BitwiseAndHandler{}}),
-    Some(Command{mnemonics: &["BITOR"], handler: &BitwiseOrHandler{}}),
-    Some(Command{mnemonics: &["BITXOR"], handler: &BitwiseXorHandler{}}),
-    Some(Command{mnemonics: &["LSHIFT"], handler: &LeftShiftHandler{}}),
-    Some(Command{mnemonics: &["RSHIFT"], handler: &RightShiftHandler{}}),
-    Some(Command{mnemonics: &["CMP"], handler: &CmpHandler{}}),
-    Some(Command{mnemonics: &["GETIP"], handler: &GetIPHandler{}}),
-    Some(Command{mnemonics: &["GETSP"], handler: &GetSPHandler{}}),
-    Some(Command{mnemonics: &["GETFP"], handler: &GetFPHandler{}}),
-    Some(Command{mnemonics: &["GETRV"], handler: &GetRVHandler{}}),
-    Some(Command{mnemonics: &["SETIP"], handler: &SetIPHandler{}}),
-    Some(Command{mnemonics: &["SETSP"], handler: &SetSPHandler{}}),
-    Some(Command{mnemonics: &["SETFP"], handler: &SetFPHandler{}}),
-    Some(Command{mnemonics: &["SETRV"], handler: &SetRVHandler{}}),
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    None,
-    Some(Command{mnemonics: &["DROP2"], handler: &Drop2Handler{}}),
-    Some(Command{mnemonics: &["DUP"], handler: &DupHandler{}}),
-    Some(Command{mnemonics: &["DROP"], handler: &DropHandler{}}),
-    Some(Command{mnemonics: &["SWAP"], handler: &SwapHandler{}}),
-    Some(Command{mnemonics: &["ROT"], handler: &RotHandler{}}),
-    Some(Command{mnemonics: &["OVER"], handler: &OverHandler{}}),
-    Some(Command{mnemonics: &["SDROP"], handler: &SdropHandler{}}),
-    None,
-    None,
-    Some(Command{mnemonics: &["NEG"], handler: &NegHandler{}}),
-    Some(Command{mnemonics: &["BITNOT"], handler: &BitwiseNotHandler{}}),
-    None,
-    None,
-    Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
-    None,
-    None,
-    Some(Command{mnemonics: &["MUL"], handler: &MulHandler{}}),
-    Some(Command{mnemonics: &["DIV"], handler: &DivHandler{}}),
-    Some(Command{mnemonics: &["MOD"], handler: &ModHandler{}}),
-    None,
-    Some(Command{mnemonics: &["OUT"], handler: &OutHandler{}}),
-];
-
-pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
-    let index = -opcode as usize - 1;
-    COMMANDS.get(index)
-            .map(Option::as_ref)
-            .flatten()
-            .ok_or_else(|| anyhow!("no handler for opcode {opcode}"))
-            .map(|x| x.handler)
-}
-
 bin_op_handler!(AddHandler, add_handler_body, +);
 bin_op_handler!(SubHandler, sub_handler_body, -);
 bin_op_handler!(BitwiseAndHandler, bitwise_and_handler_body, &);
@@ -150,6 +150,15 @@ impl CommandHandler for HaltHandler {
     }
 }
 
+pub struct InHandler;
+impl CommandHandler for InHandler {
+    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+        let c = io.get_char()?;
+        vm.push(c)?;
+        Ok(None)
+    }
+}
+
 pub struct OutHandler;
 impl CommandHandler for OutHandler {
     fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
@@ -159,21 +168,20 @@ impl CommandHandler for OutHandler {
     }
 }
 
-pub struct CmpHandler;
-impl CommandHandler for CmpHandler {
-    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
-        let y = vm.pop()?;
-        let x = vm.pop()?;
-        if x < y {
-            vm.push(-1)?;
-        } else if x > y {
-            vm.push(1)?;
-        } else {
-            vm.push(0)?;
-        }
-        Ok(None)
+fn cmp_handler_body(vm: &mut VM) -> Result<()> {
+    let y = vm.pop()?;
+    let x = vm.pop()?;
+    if x < y {
+        vm.push(-1)?;
+    } else if x > y {
+        vm.push(1)?;
+    } else {
+        vm.push(0)?;
     }
+    Ok(())
 }
+handler!(CmpHandler, cmp_handler_body);
+
 
 fn dup_handler_body(vm: &mut VM) -> Result<()> {
     let x = vm.pop()?;
