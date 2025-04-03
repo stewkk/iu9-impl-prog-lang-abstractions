@@ -2,42 +2,51 @@ use anyhow::{anyhow, Result};
 
 use crate::models::{command::{Command, CommandHandler, InputOutput, Opcode, ReturnCode}, vm::VM};
 
-macro_rules! bin_op_handler {
-    ( $handler:ident, $op:tt ) => {
+macro_rules! handler {
+    ( $handler:ident, $body:ident ) => {
         pub struct $handler;
         impl CommandHandler for $handler {
             fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
-                let y = vm.pop()?;
-                let x = vm.pop()?;
-                vm.push(x $op y)?;
+                $body(vm)?;
                 Ok(None)
             }
         }
+    };
+}
+
+macro_rules! bin_op_handler {
+    ( $handler:ident, $body:ident, $op:tt ) => {
+        fn $body(vm: &mut VM) -> Result<()> {
+            let y = vm.pop()?;
+            let x = vm.pop()?;
+            vm.push(x $op y)?;
+            Ok(())
+        }
+
+        handler!($handler, $body);
     };
 }
 
 macro_rules! get_register_handler {
-    ( $handler:ident, $register:ident ) => {
-        pub struct $handler;
-        impl CommandHandler for $handler {
-            fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
-                vm.push(vm.registers().$register)?;
-                Ok(None)
-            }
+    ( $handler:ident, $body:ident, $register:ident ) => {
+        fn $body(vm: &mut VM) -> Result<()> {
+            vm.push(vm.registers().$register)?;
+            Ok(())
         }
+
+        handler!($handler, $body);
     };
 }
 
 macro_rules! set_register_handler {
-    ( $handler:ident, $register:ident ) => {
-        pub struct $handler;
-        impl CommandHandler for $handler {
-            fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
-                let a = vm.pop()?;
-                vm.registers_mut().$register = a;
-                Ok(None)
-            }
+    ( $handler:ident, $body:ident, $register:ident ) => {
+        fn $body(vm: &mut VM) -> Result<()> {
+            let a = vm.pop()?;
+            vm.registers_mut().$register = a;
+            Ok(())
         }
+
+        handler!($handler, $body);
     };
 }
 
@@ -97,26 +106,26 @@ pub fn get_handler(opcode: Opcode) -> Result<&'static dyn CommandHandler> {
             .map(|x| x.handler)
 }
 
-bin_op_handler!(AddHandler, +);
-bin_op_handler!(SubHandler, -);
-bin_op_handler!(BitwiseAndHandler, &);
-bin_op_handler!(BitwiseOrHandler, |);
-bin_op_handler!(BitwiseXorHandler, ^);
-bin_op_handler!(LeftShiftHandler, <<);
-bin_op_handler!(RightShiftHandler, >>);
-bin_op_handler!(MulHandler, *);
-bin_op_handler!(DivHandler, /);
-bin_op_handler!(ModHandler, %);
+bin_op_handler!(AddHandler, add_handler_body, +);
+bin_op_handler!(SubHandler, sub_handler_body, -);
+bin_op_handler!(BitwiseAndHandler, bitwise_and_handler_body, &);
+bin_op_handler!(BitwiseOrHandler, bitwise_or_handler_body, |);
+bin_op_handler!(BitwiseXorHandler, bitwise_xor_handler_body, ^);
+bin_op_handler!(LeftShiftHandler, left_shift_handler_body, <<);
+bin_op_handler!(RightShiftHandler, right_shift_handler_body, >>);
+bin_op_handler!(MulHandler, mul_handler_body, *);
+bin_op_handler!(DivHandler, div_handler_body, /);
+bin_op_handler!(ModHandler, mod_handler_body, %);
 
-get_register_handler!(GetIPHandler, ip);
-get_register_handler!(GetFPHandler, fp);
-get_register_handler!(GetSPHandler, sp);
-get_register_handler!(GetRVHandler, rv);
+get_register_handler!(GetIPHandler, get_ip_handler_body, ip);
+get_register_handler!(GetFPHandler, get_fp_handler_body, fp);
+get_register_handler!(GetSPHandler, get_sp_handler_body, sp);
+get_register_handler!(GetRVHandler, get_rv_handler_body, rv);
 
-set_register_handler!(SetIPHandler, ip);
-set_register_handler!(SetFPHandler, fp);
-set_register_handler!(SetSPHandler, sp);
-set_register_handler!(SetRVHandler, rv);
+set_register_handler!(SetIPHandler, set_ip_handler_body, ip);
+set_register_handler!(SetFPHandler, set_fp_handler_body, fp);
+set_register_handler!(SetSPHandler, set_sp_handler_body, sp);
+set_register_handler!(SetRVHandler, set_rv_handler_body, rv);
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
