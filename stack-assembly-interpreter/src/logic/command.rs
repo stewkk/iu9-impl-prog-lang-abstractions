@@ -37,8 +37,8 @@ pub const COMMANDS: [Option<Command>; 44] = [
     None,
     Some(Command{mnemonics: &["NEG"], handler: &NegHandler{}}),
     Some(Command{mnemonics: &["BITNOT"], handler: &BitwiseNotHandler{}}),
-    None,
-    None,
+    Some(Command{mnemonics: &["LOAD"], handler: &LoadHandler{}}),
+    Some(Command{mnemonics: &["SAVE"], handler: &SaveHandler{}}),
     Some(Command{mnemonics: &["HALT"], handler: &HaltHandler{}}),
     None,
     None,
@@ -241,6 +241,22 @@ fn drop2_handler_body(vm: &mut VM) -> Result<()> {
     Ok(())
 }
 handler!(Drop2Handler, drop2_handler_body);
+
+fn load_handler_body(vm: &mut VM) -> Result<()> {
+    let address = vm.pop()?;
+    let data = vm.read_memory(address)?;
+    vm.push(data)?;
+    Ok(())
+}
+handler!(LoadHandler, load_handler_body);
+
+fn save_handler_body(vm: &mut VM) -> Result<()> {
+    let value = vm.pop()?;
+    let address = vm.pop()?;
+    vm.write_memory(address, value)?;
+    Ok(())
+}
+handler!(SaveHandler, save_handler_body);
 
 #[cfg(test)]
 mod tests {
