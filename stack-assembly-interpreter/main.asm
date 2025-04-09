@@ -19,8 +19,27 @@ HALT
     SETFP
     String
     LOAD                        ; p
+    IN                          ; p '1'
+    DUP                         ; p '1' '1'
+    45                          ; p '1' '1' '-'
+    SUB                         ; p '1' ('1' - '-')
+    PositiveNumber
+    JNE
+
+    IsNeg
+    LOAD                        ; p '-' IsNeg
+    1
+    SAVE
+    DROP
+    IN
+    LoopReadLine
+    JMP
+    :PositiveNumber
+    IsNeg
+    LOAD                        ; p '1' IsNeg
+    0
+    SAVE
     :LoopReadLine
-        IN                      ; p '1'
         DUP                     ; p '1' '1'
         10
         SUB                     ; p '1' '1'-'\n'
@@ -31,6 +50,7 @@ HALT
         SAVE                    ; p ; *p = '1'
         1
         ADD                     ; p++
+        IN                      ; p '1'
         LoopReadLine
         JMP
     :EndLoopReadLine
@@ -132,6 +152,14 @@ HALT
 :OutputHexReversed              ; std::end(String)
     SETFP
 
+    IsNeg
+    LOAD
+    LOAD
+    SkipOutputMinus
+    JEQ
+    45
+    OUT
+    :SkipOutputMinus
     48
     OUT
     120
@@ -172,3 +200,5 @@ HALT
 
 :String
 2000
+:IsNeg
+3000
