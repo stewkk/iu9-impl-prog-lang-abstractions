@@ -43,6 +43,12 @@ HALT
     String
     LOAD                        ; p
     LOAD                        ; '1'
+    DUP
+    SkipEarlyReturn
+    JNE
+    0
+    HALT
+    :SkipEarlyReturn
     48
     SUB                         ; 1
 
@@ -65,11 +71,11 @@ HALT
         SWAP                    ; 12 p+1
         LoopStoi
         JMP
-    :LoopStoiEnd                ; 1 p
-    DROP
+    :LoopStoiEnd                ; 1 p 0
+    DROP2
     SETRV
     GETFP
     RET
 
 :String
-300
+2000
