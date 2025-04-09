@@ -4,8 +4,12 @@ CALL
 Stoi
 CALL
 
-GETRV
-OUT
+ToHex
+CALL
+;;; NOTE: stack = [std::end(String)]
+
+OutputHexReversed
+CALL
 
 0
 HALT
@@ -74,6 +78,95 @@ HALT
     :LoopStoiEnd                ; 1 p 0
     DROP2
     SETRV
+    GETFP
+    RET
+
+:ToHex
+    SETFP
+
+    String
+    LOAD                        ; p
+    :LoopToHex
+    GETRV                       ; p 123
+    DUP                         ; p 123 123
+    ToHexRet                    ;
+    JEQ                         ; p 0
+    16
+    MOD                         ; p 123%16
+
+    DUP                         ; p digit digit
+    10
+    SUB                         ; p digit digit - 10
+    GreaterThanNineToHex
+    JGE
+    ;; if 123%16 < 10
+    48
+    ADD                         ; p '0'
+    EndIfToHex
+    JMP
+    :GreaterThanNineToHex
+    ;; p digit
+    10
+    SUB                         ; digit - 10
+    65
+    ADD                         ; p 'A'
+    :EndIfToHex
+    SWAP                        ; 'A' p
+    DUP                         ; 'A' p p
+    ROT                         ; p p 'A'
+    SAVE                        ; p
+    1
+    ADD                         ; p+1
+    GETRV                       ; p+1 123
+    16
+    DIV                         ; p+1 123/16
+    SETRV                       ; p+1
+    LoopToHex
+    JMP
+
+    :ToHexRet                   ; p 0
+    DROP                        ; p
+    GETFP
+    RET
+
+:OutputHexReversed              ; std::end(String)
+    SETFP
+
+    48
+    OUT
+    120
+    OUT
+
+    DUP                         ; it it
+    String
+    LOAD
+    SUB                         ; it it-String
+    ZeroOutputHexReversedRet
+    JEQ
+
+    :LoopOutputHexReversed
+    1
+    SUB                         ; it
+    String
+    LOAD                        ; it 2000
+    SWAP                        ; 2000 it
+    DUP                         ; 2000 it it
+    ROT                         ; it it 2000
+    SUB                         ; it it-2000
+    OutputHexReversedRet
+    JLT
+    ;;; it
+    DUP
+    LOAD                        ; it 'A'
+    OUT                         ; it
+    LoopOutputHexReversed
+    JMP
+
+    :ZeroOutputHexReversedRet
+    48
+    OUT
+
+    :OutputHexReversedRet
     GETFP
     RET
 
