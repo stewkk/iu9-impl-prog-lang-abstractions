@@ -62,7 +62,7 @@ macro_rules! handler {
     ( $handler:ident, $body:ident ) => {
         pub struct $handler;
         impl CommandHandler for $handler {
-            fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+            fn handle(&self, vm: &mut VM, _: &mut dyn InputOutput) -> Result<Option<ReturnCode>> {
                 $body(vm)?;
                 Ok(None)
             }
@@ -166,7 +166,7 @@ conditional_jump_handler!(JneHandler, jne_handler_body, !=);
 
 pub struct HaltHandler;
 impl CommandHandler for HaltHandler {
-    fn handle(&self, vm: &mut VM, _: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, _: &mut dyn InputOutput) -> Result<Option<ReturnCode>> {
         let rc = vm.pop()?;
         Ok(Some(rc))
     }
@@ -174,7 +174,7 @@ impl CommandHandler for HaltHandler {
 
 pub struct InHandler;
 impl CommandHandler for InHandler {
-    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, io: &mut dyn InputOutput) -> Result<Option<ReturnCode>> {
         let c = io.get_char()?;
         vm.push(c)?;
         Ok(None)
@@ -183,7 +183,7 @@ impl CommandHandler for InHandler {
 
 pub struct OutHandler;
 impl CommandHandler for OutHandler {
-    fn handle(&self, vm: &mut VM, io: &dyn InputOutput) -> Result<Option<ReturnCode>> {
+    fn handle(&self, vm: &mut VM, io: &mut dyn InputOutput) -> Result<Option<ReturnCode>> {
         let a = vm.pop()?;
         io.print_char(a)?;
         Ok(None)
@@ -317,7 +317,7 @@ mod tests {
         vm.push(2).unwrap();
         vm.push(3).unwrap();
 
-        AddHandler{}.handle(&mut vm, &Stdio{}).unwrap();
+        AddHandler{}.handle(&mut vm, &mut Stdio::new()).unwrap();
 
         assert_eq!(vm.read_stack(0).unwrap(), 5)
     }

@@ -23,7 +23,7 @@ pub fn run(file_paths: &[String]) -> Result<ReturnCode> {
     let instructions = assembly::assembly(&files?)?;
 
     let vm = VM::new(instructions);
-    let executor = Executor{ io: &Stdio{} };
+    let mut executor = Executor{ io: &mut Stdio::new() };
 
     executor.execute(vm)
 }

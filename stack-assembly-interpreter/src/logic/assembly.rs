@@ -99,7 +99,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
     #[test]
     fn error_on_undefined_ident() {
-        let text = String::from("72 a 123 a");
+        let text = String::from("72 a 123");
 
         let got = assembly(&[TextFile{name: "test".to_owned(), text}]);
 

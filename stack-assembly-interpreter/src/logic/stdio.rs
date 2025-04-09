@@ -1,13 +1,29 @@
-use console::Term;
 use anyhow::{anyhow, Result};
+
+use std::io::{self, BufRead};
 
 use crate::models::command::{Input, Output};
 
-pub struct Stdio;
+pub struct Stdio {
+    buffer: String,
+}
+
+impl Stdio {
+    pub fn new() -> Self {
+        Self { buffer: "".to_string() }
+    }
+}
 
 impl Input for Stdio {
-    fn get_char(&self) -> Result<i64> {
-        Ok(Term::stdout().read_char().map(|c| c as i64)?)
+    fn get_char(&mut self) -> Result<i64> {
+        while self.buffer.is_empty() {
+            let mut stdin = io::stdin().lock();
+            stdin.read_line(&mut self.buffer)?;
+        }
+        let c = self.buffer.chars().next().ok_or_else(|| anyhow!("empty buffer"))?;
+        self.buffer = self.buffer.get(1..).unwrap_or_default().to_string();
+
+        Ok(c as i64)
     }
 }
 

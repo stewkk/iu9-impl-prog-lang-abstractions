@@ -102,7 +102,7 @@ _Loop :a1 HALT _Read_number_ _- _ a1 ; a1 == 260
 
         let got = tokenize(text, "test");
 
-        assert_eq!(got.unwrap_err().to_string(), "test:1:5: failed to tokenize integer: \"99999999999999999999\"");
+        assert_eq!(got.unwrap_err().to_string(), "test:1:5: failed to tokenize integer: \"99999999999999999999\": number too large to fit in target type");
     }
 
     #[test]

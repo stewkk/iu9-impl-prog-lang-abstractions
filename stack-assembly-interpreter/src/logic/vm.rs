@@ -8,11 +8,11 @@ use super::command::get_handler;
 
 // NOTE: it's easier here to use a crate that can create mock of struct
 pub struct Executor<'a, IO: Input + Output> {
-    pub io: &'a IO,
+    pub io: &'a mut IO,
 }
 
 impl<'a, IO: Input + Output> Executor<'a, IO> {
-    pub fn execute(&self, mut vm: VM) -> Result<ReturnCode> {
+    pub fn execute(&mut self, mut vm: VM) -> Result<ReturnCode> {
         loop {
             if let Some(rc) = self.execute_step(&mut vm)? {
                 return Ok(rc)
@@ -20,7 +20,7 @@ impl<'a, IO: Input + Output> Executor<'a, IO> {
         }
     }
 
-    fn execute_step(&self, vm: &mut VM) -> Result<Option<ReturnCode>> {
+    fn execute_step(&mut self, vm: &mut VM) -> Result<Option<ReturnCode>> {
         let ip = vm.registers().ip;
         let instruction = vm.read_code(ip)?.clone();
         let opcode = instruction.opcode;
@@ -56,8 +56,9 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
-        let io = &Stdio{};
-        let executor = Executor{io}; let rc = executor.execute(vm).unwrap();
+        let mut io = Stdio::new();
+        let mut executor = Executor{io: &mut io};
+        let rc = executor.execute(vm).unwrap();
 
         assert_eq!(rc, 5)
     }
@@ -67,8 +68,8 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "2 3 ADD 0 HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
-        let io = &Stdio{};
-        let executor = Executor{io};
+        let mut io = Stdio::new();
+        let mut executor = Executor{io: &mut io};
 
         let rc = executor.execute(vm).unwrap();
 
@@ -80,8 +81,8 @@ mod tests {
         let files = &[TextFile{name: "stdin".to_string(), text: "HALT".to_string()}];
         let instructions = assembly::assembly(files).unwrap();
         let vm = VM::new(instructions);
-        let io = &Stdio{};
-        let executor = Executor{io};
+        let mut io = Stdio::new();
+        let mut executor = Executor{io: &mut io};
 
         let got = executor.execute(vm);
 
@@ -91,7 +92,7 @@ mod tests {
     mock! {
         InputOutput {}
         impl Input for InputOutput {
-            fn get_char(&self) -> Result<i64>;
+            fn get_char(&mut self) -> Result<i64>;
         }
         impl Output for InputOutput {
             fn print_char(&self, c: i64) -> Result<()>;
@@ -109,7 +110,7 @@ mod tests {
           .with(predicate::eq(5))
           .return_once(|_| Ok(()));
 
-        let executor = Executor{io: &io};
+        let mut executor = Executor{io: &mut io};
         let _ = executor.execute(vm).unwrap();
     }
 }
