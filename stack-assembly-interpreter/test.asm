@@ -1,0 +1,1 @@
+1 2 ADD a1 0 HALT

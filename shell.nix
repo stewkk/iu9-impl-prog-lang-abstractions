@@ -15,5 +15,6 @@ mkShell.override { stdenv = pkgs.llvmPackages_18.stdenv; } {
     pkgs.cargo
     pkgs.rustc
     pkgs.rust-analyzer
+    pkgs.gdb
   ];
 }
