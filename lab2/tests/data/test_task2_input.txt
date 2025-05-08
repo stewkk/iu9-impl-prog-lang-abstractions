@@ -1,0 +1,3 @@
+$ENTRY Go {
+    /* empty */ = <Prout Hello>
+}

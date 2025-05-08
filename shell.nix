@@ -54,6 +54,7 @@ mkShell.override { stdenv = pkgs.llvmPackages_18.stdenv; } {
 
     export LD_LIBRARY_PATH=$NIX_LD_LIBRARY_PATH
     export PYTHONPATH="${pythonWithPytest}/lib/python3.10/site-packages:$PYTHONPATH"
+    export REF5RSL="$PWD/lab2/refal/refal-5-framework/lib:$PWD/lab2/refal/refal-5-framework/lib/posix:$REF5RSL"
 
     if [ -f lab2/requirements.txt ]; then
       pip install -r lab2/requirements.txt

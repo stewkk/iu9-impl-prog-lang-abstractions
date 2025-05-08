@@ -1,4 +1,6 @@
+*$FROM LibraryEx
+$EXTERN LoadExpr;
 
 $ENTRY Go {
-       /* empty */ = <Prout 'Hello'>
+    /* empty */ = <Prout <LoadExpr <Arg 1>>>
 }
