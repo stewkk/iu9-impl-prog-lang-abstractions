@@ -8,6 +8,10 @@ import shlex
 @pytest.mark.parametrize("args, expected_stdout_file, expected_stderr",
                          [
                              ("tests/data/test_file.txt", "tests/data/test_single_file_no_number.txt", ""),
+                             ("+2 tests/data/test_file.txt", "tests/data/test_single_file_2_lines.txt", ""),
+                             ("+2 tests/data/test_file.txt tests/data/test_file.txt", "tests/data/test_two_files.txt", ""),
+                             ("+0 tests/data/test_file.txt", "tests/data/test_empty.txt", ""),
+                             ("+300 tests/data/test_file.txt", "tests/data/test_file.txt", ""),
                          ])
 def test_task1(args, expected_stdout_file, expected_stderr):
     process = subprocess.run(

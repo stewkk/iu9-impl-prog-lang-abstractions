@@ -1,5 +1,25 @@
 $ENTRY Go {
-    /* empty */ = <Prout <Explode <Join <Tail 10 <Arg 1>> '\n'>>>
+    /* empty */ = <TailAll <GetCount>>
+}
+
+TailAll {
+    0 s.Arg = /* empty */;
+    s.Count s.Arg
+    , <Arg s.Arg>
+    : {
+        /* empty */ = /* empty */;
+        e.Path = <Prout <Join <Tail s.Count e.Path> '\n'>>
+            <TailAll s.Count <+ s.Arg 1>>
+    };
+}
+
+GetCount {
+    /* empty */
+    , <Arg 1>
+    : {
+        '+' e.Number = <Numb e.Number> 2;
+        e.Other = 10 1;
+    };
 }
 
 Tail {
@@ -11,11 +31,11 @@ Tail {
 }
 
 Join {
-    s.Acc s.First e.Rest s.Separator = <Join
-                                        <Implode_Ext <Explode s.Acc> s.Separator <Explode s.First>>
+    (e.Acc) (e.First) e.Rest s.Separator = <Join
+                                        (e.Acc s.Separator e.First)
                                         e.Rest
                                         s.Separator>;
-    s.Acc s.Separator = s.Acc;
+    (e.Acc) s.Separator = e.Acc;
 }
 
 FileNo {
@@ -33,7 +53,7 @@ GetLinesDo {
     , <Get <FileNo>>
     : {
         0 = e.Lines;
-        e.Line 0 = e.Lines <Implode_Ext e.Line>;
-        e.Line = <GetLinesDo e.Lines <Implode_Ext e.Line>>;
+        e.Line 0 = e.Lines (e.Line);
+        e.Line = <GetLinesDo e.Lines (e.Line)>;
     }
 }

@@ -1,6 +1,7 @@
+args = ""
 
 all: compile
-	@echo "------------------------------" && refal/refgo task1.rsl
+	@echo "------------------------------" && refal/refgo task1.rsl $(args)
 
 2: compile
 	@echo "------------------------------" && refal/refgo task2.rsl
