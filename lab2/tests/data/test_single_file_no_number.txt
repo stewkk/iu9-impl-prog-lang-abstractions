@@ -1,0 +1,10 @@
+</h2>
+
+
+
+<p style="margin-left:9%; margin-top: 1em">https://gitlab.com/man-db/man-db/-/issues
+<br>
+ https://savannah.nongnu.org/bugs/?group=man-db</p>
+<hr>
+</body>
+</html>

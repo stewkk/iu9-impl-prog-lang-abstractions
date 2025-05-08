@@ -6,7 +6,7 @@ all: compile
 	@echo "------------------------------" && refal/refgo task2.rsl
 
 test: compile
-	@pytest tests/*.py
+	@pytest -vvv tests/*.py
 
 compile:
 	@refal/refc task1.ref

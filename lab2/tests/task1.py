@@ -5,11 +5,11 @@ import subprocess
 import shlex
 
 
-@pytest.mark.parametrize("args, expected_stdout, expected_stderr",
+@pytest.mark.parametrize("args, expected_stdout_file, expected_stderr",
                          [
-                             ("test_single.txt", "test_single.txt", ""),
+                             ("tests/data/test_file.txt", "tests/data/test_single_file_no_number.txt", ""),
                          ])
-def test_task1(args, expected_stdout, expected_stderr):
+def test_task1(args, expected_stdout_file, expected_stderr):
     process = subprocess.run(
         [
             "refal/refgo",
@@ -18,7 +18,8 @@ def test_task1(args, expected_stdout, expected_stderr):
         capture_output=True,
         text=True,
     )
+    with open(expected_stdout_file) as f: expected_stdout = f.read()
 
-    output = process.stdout.rstrip(), process.stderr.rstrip()
+    output = process.stdout, process.stderr
 
     assert output == (expected_stdout, expected_stderr)

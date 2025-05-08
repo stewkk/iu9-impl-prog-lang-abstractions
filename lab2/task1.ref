@@ -1,4 +1,39 @@
-
 $ENTRY Go {
-       /* empty */ = <Prout <Arg 1>>
+    /* empty */ = <Prout <Explode <Join <Tail 10 <Arg 1>> '\n'>>>
+}
+
+Tail {
+    s.Count e.Name
+    , <Last s.Count <GetLines e.Name>>
+    : {
+        (e.Prefix) e.Suffix = e.Suffix;
+    }
+}
+
+Join {
+    s.Acc s.First e.Rest s.Separator = <Join
+                                        <Implode_Ext <Explode s.Acc> s.Separator <Explode s.First>>
+                                        e.Rest
+                                        s.Separator>;
+    s.Acc s.Separator = s.Acc;
+}
+
+FileNo {
+    /* empty */ = 10;
+}
+
+GetLines {
+    e.Name = <Open 'r' <FileNo> e.Name>
+    <GetLinesDo>
+    <Close <FileNo>>
+}
+
+GetLinesDo {
+    e.Lines
+    , <Get <FileNo>>
+    : {
+        0 = e.Lines;
+        e.Line 0 = e.Lines <Implode_Ext e.Line>;
+        e.Line = <GetLinesDo e.Lines <Implode_Ext e.Line>>;
+    }
 }
