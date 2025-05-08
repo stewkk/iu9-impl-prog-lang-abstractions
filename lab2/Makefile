@@ -1,13 +1,20 @@
 
-all:
-	@refal/refc task1.ref && echo "------------------------------" && refal/refgo task1.rsl
+all: compile
+	@echo "------------------------------" && refal/refgo task1.rsl
 
-2:
-	@refal/refc task2.ref && echo "------------------------------" && refal/refgo task2.rsl
+2: compile
+	@echo "------------------------------" && refal/refgo task2.rsl
+
+test: compile
+	@pytest tests/*.py
+
+compile:
+	@refal/refc task1.ref
+	@refal/refc task2.ref
 
 clean:
 	@rm task1.rsl
 	@rm task2.rsl
 
 
-.PHONY: all
+.PHONY: all 2 clean compile

@@ -1,3 +1,4 @@
 /.venv/
 /lab2/refal/
 *.rsl
+/lab2/tests/__pycache__/
