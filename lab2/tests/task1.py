@@ -12,6 +12,7 @@ import shlex
                              ("+2 tests/data/test_file.txt tests/data/test_file.txt", "tests/data/test_two_files.txt", ""),
                              ("+0 tests/data/test_file.txt", "tests/data/test_empty.txt", ""),
                              ("+300 tests/data/test_file.txt", "tests/data/test_file.txt", ""),
+                             ("+300 tests/data/test_empty.txt", "tests/data/test_empty.txt", ""),
                          ])
 def test_task1(args, expected_stdout_file, expected_stderr):
     process = subprocess.run(
