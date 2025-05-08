@@ -1,4 +1,4 @@
 
 $ENTRY Go {
-       /* empty */ = <Prout 'Hello'>
+       /* empty */ = <Prout <Arg 1>>
 }
