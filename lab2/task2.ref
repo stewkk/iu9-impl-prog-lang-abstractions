@@ -1,6 +1,77 @@
 *$FROM LibraryEx
-$EXTERN LoadExpr;
+$EXTERN LoadExpr, Map, ArgList;
 
+/* <Go> == empty */
 $ENTRY Go {
-    /* empty */ = <Prout <LoadExpr <Arg 1>>>
+    /* empty */ = <Main <ArgList>>
+}
+
+/* <Main e.ProgName e.FileNames> == empty */
+/* e.ProgName ::= (s.CHAR+) */
+/* e.FileNames ::= e.FileName* */
+/* e.FileName ::= (s.CHAR+) */
+Main {
+    (e.ProgName) e.FileNames = <Map task2_Process e.FileNames>
+}
+
+/* <task2_Process e.FileName> == empty */
+/* e.FileName ::= (s.CHAR+) */
+$ENTRY task2_Process {
+    (e.Filename) = <Prout <RatioPolynoms <LoadExpr e.Filename>>>
+}
+
+/* <RatioPolynoms t.Expr> == t.Expr */
+/* t.Expr ::= t.Expr '+' t.Expr */
+/*     | t.Expr '-' t.Expr */
+/*     | t.Expr '*' t.Expr */
+/*     | t.Expr '/' t.Expr */
+/*     | s.Varname */
+/* s.Varname ::= s.WORD */
+RatioPolynoms {
+    t.Expr
+    , <ToRatio t.Expr>
+    : {
+        (t.Lhs "/" t.Rhs) = (<ToPolynom t.Lhs> "/" <ToPolynom t.Rhs>);
+        t.Other = <ToPolynom t.Other>;
+    };
+}
+
+ToPolynom {
+    s.Other = s.Other;
+    (t.Lhs s.Op t.Rhs)
+    , (<ToPolynom t.Lhs> s.Op <ToPolynom t.Rhs>)
+    : {
+        ((t.L1 s.Op1 t.R1) "*" (t.L2 s.Op2 t.R2)), "+" "-" "+" "-" : e.1 s.Op1 e.2 s.Op2 e.3
+            = <ToPolynom <Multiply (t.L1 s.Op1 t.R1) (t.L2 s.Op2 t.R2)>>;
+        ((t.L1 s.Op1 t.R1) "*" t.Other), "+" "-" : e.1 s.Op1 e.2
+            = <Multiply (t.L1 s.Op1 t.R1) t.Other>;
+        (t.Other "*" (t.L2 s.Op2 t.R2)), "+" "-" : e.1 s.Op2 e.2
+            = <Multiply (t.L2 s.Op2 t.R2) t.Other>;
+        t.Other = t.Other;
+    };
+}
+
+Multiply {
+    (t.Lhs s.Op t.Rhs) t.Factor, "+" "-" : e.1 s.Op e.2
+        = (<Multiply t.Lhs t.Factor> s.Op <Multiply t.Rhs t.Factor>);
+    (t.Lhs "*" t.Rhs) t.Factor = (t.Lhs "*" (t.Rhs "*" t.Factor));
+    t.Other t.Factor = (t.Other "*" t.Factor)
+}
+
+ToRatio {
+    s.Other = s.Other;
+    (t.Lhs s.Op t.Rhs)
+    , (<ToRatio t.Lhs> s.Op <ToRatio t.Rhs>)
+    : {
+        ((t.A "/" t.B) "/" (t.C "/" t.D)) = ((t.A "*" t.D) "/" (t.C "*" t.B));
+        ((t.A "/" t.B) "/" t.C) = (t.A "/" (t.B "*" t.C));
+        (t.A "/" (t.B "/" t.C)) = ((t.A "*" t.C) "/" t.B);
+        ((t.A "/" t.B) "*" (t.C "/" t.D)) = ((t.A "*" t.C) "/" (t.B "*" t.D));
+        ((t.A "/" t.B) "*" t.C) = ((t.A "*" t.C) "/" t.B);
+        (t.A "*" (t.B "/" t.C)) = ((t.A "*" t.B) "/" t.C);
+        ((t.A "/" t.B) s.PlusOrMinus (t.C "/" t.D)) = (((t.A "*" t.D) s.PlusOrMinus (t.C "*" t.B)) "/" (t.B "*" t.D));
+        ((t.A "/" t.B) s.PlusOrMinus t.C) = ((t.A s.PlusOrMinus (t.C "*" t.B)) "/" t.B);
+        (t.A s.PlusOrMinus (t.B "/" t.C)) = (((t.A "*" t.C) s.PlusOrMinus t.B) "/" t.C);
+        t.Other = t.Other;
+    }
 }
