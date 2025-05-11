@@ -36,6 +36,12 @@ RatioPolynoms {
     };
 }
 
+/* <ToPolynom t.Expr> == t.Expr */
+/* t.Expr ::= t.Expr '+' t.Expr */
+/*     | t.Expr '-' t.Expr */
+/*     | t.Expr '*' t.Expr */
+/*     | s.Varname */
+/* s.Varname ::= s.WORD */
 ToPolynom {
     s.Other = s.Other;
     (t.Lhs s.Op t.Rhs)
@@ -51,6 +57,13 @@ ToPolynom {
     };
 }
 
+/* <Multiply t.Expr t.Factor> == t.Expr */
+/* t.Expr ::= t.Expr '+' t.Expr */
+/*     | t.Expr '-' t.Expr */
+/*     | t.Expr '*' t.Expr */
+/*     | s.Varname */
+/* t.Factor ::= t.Expr */
+/* s.Varname ::= s.WORD */
 Multiply {
     (t.Lhs s.Op t.Rhs) t.Factor, "+" "-" : e.1 s.Op e.2
         = (<Multiply t.Lhs t.Factor> s.Op <Multiply t.Rhs t.Factor>);
@@ -58,6 +71,13 @@ Multiply {
     t.Other t.Factor = (t.Other "*" t.Factor)
 }
 
+/* <ToRatio t.Expr> == t.Expr */
+/* t.Expr ::= t.Expr '+' t.Expr */
+/*     | t.Expr '-' t.Expr */
+/*     | t.Expr '*' t.Expr */
+/*     | t.Expr '/' t.Expr */
+/*     | s.Varname */
+/* s.Varname ::= s.WORD */
 ToRatio {
     s.Other = s.Other;
     (t.Lhs s.Op t.Rhs)
