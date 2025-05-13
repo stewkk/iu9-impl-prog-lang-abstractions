@@ -36,6 +36,12 @@ RatioPolynoms {
     };
 }
 
+IsAdditiveExpr {
+    (t.Lhs s.Op t.Rhs), "+" "-" : e.1 s.Op e.2
+        = True;
+    t.Other = False;
+}
+
 /* <ToPolynom t.Expr> == t.Expr */
 /* t.Expr ::= t.Expr '+' t.Expr */
 /*     | t.Expr '-' t.Expr */
@@ -44,17 +50,19 @@ RatioPolynoms {
 /* s.Varname ::= s.WORD */
 ToPolynom {
     s.Other = s.Other;
-    (t.Lhs s.Op t.Rhs)
-    , (<ToPolynom t.Lhs> s.Op <ToPolynom t.Rhs>)
+    (t.Lhs "*" t.Rhs)
+    , <ToPolynom t.Lhs> <ToPolynom t.Rhs>
     : {
-        ((t.L1 s.Op1 t.R1) "*" (t.L2 s.Op2 t.R2)), "+" "-" "+" "-" : e.1 s.Op1 e.2 s.Op2 e.3
-            = <ToPolynom <Multiply (t.L1 s.Op1 t.R1) (t.L2 s.Op2 t.R2)>>;
-        ((t.L1 s.Op1 t.R1) "*" t.Other), "+" "-" : e.1 s.Op1 e.2
-            = <Multiply (t.L1 s.Op1 t.R1) t.Other>;
-        (t.Other "*" (t.L2 s.Op2 t.R2)), "+" "-" : e.1 s.Op2 e.2
-            = <Multiply (t.L2 s.Op2 t.R2) t.Other>;
-        t.Other = t.Other;
+        t.LhsPolynom t.RhsPolynom, <IsAdditiveExpr t.LhsPolynom> <IsAdditiveExpr t.RhsPolynom> : True True
+            = <ToPolynom <Multiply t.LhsPolynom t.RhsPolynom>>;
+        t.LhsPolynom t.Other, <IsAdditiveExpr t.LhsPolynom> : True
+            = <Multiply t.LhsPolynom t.Other>;
+        t.Other t.RhsPolynom, <IsAdditiveExpr t.RhsPolynom> : True
+            = <Multiply t.RhsPolynom t.Other>;
+        t.LhsPolynom t.RhsPolynom = (t.Lhs "*" t.Rhs)
     };
+    (t.Lhs s.Op t.Rhs) = (<ToPolynom t.Lhs> s.Op <ToPolynom t.Rhs>);
+    t.Other = t.Other;
 }
 
 /* <Multiply t.Expr t.Factor> == t.Expr */
@@ -65,9 +73,8 @@ ToPolynom {
 /* t.Factor ::= t.Expr */
 /* s.Varname ::= s.WORD */
 Multiply {
-    (t.Lhs s.Op t.Rhs) t.Factor, "+" "-" : e.1 s.Op e.2
-        = (<Multiply t.Lhs t.Factor> s.Op <Multiply t.Rhs t.Factor>);
     (t.Lhs "*" t.Rhs) t.Factor = (t.Lhs "*" (t.Rhs "*" t.Factor));
+    (t.Lhs s.Op t.Rhs) t.Factor = (<Multiply t.Lhs t.Factor> s.Op <Multiply t.Rhs t.Factor>);
     t.Other t.Factor = (t.Other "*" t.Factor)
 }
 
