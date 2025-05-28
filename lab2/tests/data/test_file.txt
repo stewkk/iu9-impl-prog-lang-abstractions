@@ -1,0 +1,215 @@
+<p style="margin-left:18%; margin-top: 1em">The value may
+be a simple command name or a command with arguments, and
+may use shell quoting (backslashes, single quotes, or double
+quotes). It may not use pipes to connect multiple commands;
+if you need that, use a wrapper script, which may take the
+file to display either as an argument or on standard
+input.</p>
+
+<p style="margin-left:9%;"><b>MANLESS</b></p>
+
+<p style="margin-left:18%;">If $<b>MANLESS</b> is set, its
+value will be used as the default prompt string for the
+<b>less</b> pager, as if it had been passed using the
+<b>&minus;r</b> option (so any occurrences of the text
+<b>$MAN_PN</b> will be expanded in the same way). For
+example, if you want to set the prompt string
+unconditionally to &ldquo;my prompt string&rdquo;, set
+$<b>MANLESS</b> to
+&lsquo;<b>&minus;Psmy&nbsp;prompt&nbsp;string</b>&rsquo;.
+Using the <b>&minus;r</b> option overrides this environment
+variable.</p>
+
+<p style="margin-left:9%;"><b>BROWSER</b></p>
+
+<p style="margin-left:18%;">If $<b>BROWSER</b> is set, its
+value is a colon-delimited list of commands, each of which
+in turn is used to try to start a web browser for <b>man
+&minus;&minus;html</b>. In each command, <i>%s</i> is
+replaced by a filename containing the HTML output from
+<b>groff</b>, <i>%%</i> is replaced by a single percent sign
+(%), and <i>%c</i> is replaced by a colon (:).</p>
+
+<table width="100%" border="0" rules="none" frame="void"
+       cellspacing="0" cellpadding="0">
+<tr valign="top" align="left">
+<td width="9%"></td>
+<td width="8%">
+
+
+<p><b>SYSTEM</b></p></td>
+<td width="1%"></td>
+<td width="82%">
+
+
+<p>If $<b>SYSTEM</b> is set, it will have the same effect
+as if it had been specified as the argument to the
+<b>&minus;m</b> option.</p></td></tr>
+<tr valign="top" align="left">
+<td width="9%"></td>
+<td width="8%">
+
+
+<p><b>MANOPT</b></p></td>
+<td width="1%"></td>
+<td width="82%">
+
+
+<p>If $<b>MANOPT</b> is set, it will be parsed prior to
+<b>man&rsquo;s</b> command line and is expected to be in a
+similar format. As all of the other <b>man</b> specific
+environment variables can be expressed as command line
+options, and are thus candidates for being included in
+$<b>MANOPT</b> it is expected that they will become
+obsolete. N.B. All spaces that should be interpreted as part
+of an option&rsquo;s argument must be escaped.</p></td></tr>
+</table>
+
+<p style="margin-left:9%;"><b>MANWIDTH</b></p>
+
+<p style="margin-left:18%;">If $<b>MANWIDTH</b> is set, its
+value is used as the line length for which manual pages
+should be formatted. If it is not set, manual pages will be
+formatted with a line length appropriate to the current
+terminal (using the value of $<b>COLUMNS</b>, and
+<b>ioctl</b>(2) if available, or falling back to 80
+characters if neither is available). Cat pages will only be
+saved when the default formatting can be used, that is when
+the terminal line length is between 66 and 80
+characters.</p>
+
+<p style="margin-left:9%;"><b>MAN_KEEP_FORMATTING</b></p>
+
+<p style="margin-left:18%;">Normally, when output is not
+being directed to a terminal (such as to a file or a pipe),
+formatting characters are discarded to make it easier to
+read the result without special tools. However, if
+$<b>MAN_KEEP_FORMATTING</b> is set to any non-empty value,
+these formatting characters are retained. This may be useful
+for wrappers around <b>man</b> that can interpret formatting
+characters.</p>
+
+<p style="margin-left:9%;"><b>MAN_KEEP_STDERR</b></p>
+
+<p style="margin-left:18%;">Normally, when output is being
+directed to a terminal (usually to a pager), any error
+output from the command used to produce formatted versions
+of manual pages is discarded to avoid interfering with the
+pager&rsquo;s display. Programs such as <b>groff</b> often
+produce relatively minor error messages about typographical
+problems such as poor alignment, which are unsightly and
+generally confusing when displayed along with the manual
+page. However, some users want to see them anyway, so, if
+$<b>MAN_KEEP_STDERR</b> is set to any non-empty value, error
+output will be displayed as usual.</p>
+
+<p style="margin-left:9%;"><b>MAN_DISABLE_SECCOMP</b></p>
+
+<p style="margin-left:18%;">On Linux, <b>man</b> normally
+confines subprocesses that handle untrusted data using a
+<b>seccomp</b>(2) sandbox. This makes it safer to run
+complex parsing code over arbitrary manual pages. If this
+goes wrong for some reason unrelated to the content of the
+page being displayed, you can set
+$<b>MAN_DISABLE_SECCOMP</b> to any non-empty value to
+disable the sandbox.</p>
+
+<p style="margin-left:9%;"><b>PIPELINE_DEBUG</b></p>
+
+<p style="margin-left:18%;">If the $<b>PIPELINE_DEBUG</b>
+environment variable is set to &quot;1&quot;, then
+<b>man</b> will print debugging messages to standard error
+describing each subprocess it runs.</p>
+
+<p style="margin-left:9%;"><b>LANG</b>,
+<b>LC_MESSAGES</b></p>
+
+<p style="margin-left:18%;">Depending on system and
+implementation, either or both of $<b>LANG</b> and
+$<b>LC_MESSAGES</b> will be interrogated for the current
+message locale. <b>man</b> will display its messages in that
+locale (if available). See <b>setlocale</b>(3) for precise
+details.</p>
+
+<h2>FILES
+<a name="FILES"></a>
+</h2>
+
+
+
+<p style="margin-left:9%; margin-top: 1em"><i>/nix/store/igfmqfy8s6p9nc9pbnrh62jidfbimhfm-man-db-2.12.1/etc/man_db.conf</i></p>
+
+<p style="margin-left:18%;">man-db configuration file.</p>
+
+<p style="margin-left:9%;"><i>/usr/share/man</i></p>
+
+<p style="margin-left:18%;">A global manual page
+hierarchy.</p>
+
+<h2>STANDARDS
+<a name="STANDARDS"></a>
+</h2>
+
+
+
+<p style="margin-left:9%; margin-top: 1em">POSIX.1&minus;2001,
+POSIX.1&minus;2008, POSIX.1&minus;2017.</p>
+
+<h2>SEE ALSO
+<a name="SEE ALSO"></a>
+</h2>
+
+
+
+<p style="margin-left:9%; margin-top: 1em"><b>apropos</b>(1),
+<b>groff</b>(1), <b>less</b>(1), <b>manpath</b>(1),
+<b>nroff</b>(1), <b>troff</b>(1), <b>whatis</b>(1),
+<b>zsoelim</b>(1), <b>manpath</b>(5), <b>man</b>(7),
+<b>catman</b>(8), <b>mandb</b>(8)</p>
+
+<p style="margin-left:9%; margin-top: 1em">Documentation
+for some packages may be available in other formats, such as
+<b>info</b>(1) or HTML.</p>
+
+<h2>HISTORY
+<a name="HISTORY"></a>
+</h2>
+
+
+<p style="margin-left:9%; margin-top: 1em">1990, 1991
+&ndash; Originally written by John W. Eaton
+(jwe@che.utexas.edu).</p>
+
+<p style="margin-left:9%; margin-top: 1em">Dec 23 1992: Rik
+Faith (faith@cs.unc.edu) applied bug fixes supplied by
+Willem Kasdorp (wkasdo@nikhefk.nikef.nl).</p>
+
+<p style="margin-left:9%; margin-top: 1em">30th April 1994
+&ndash; 23rd February 2000: Wilf.
+(G.Wilford@ee.surrey.ac.uk) has been developing and
+maintaining this package with the help of a few dedicated
+people.</p>
+
+<p style="margin-left:9%; margin-top: 1em">30th October
+1996 &ndash; 30th March 2001: Fabrizio Polacco
+&lt;fpolacco@debian.org&gt; maintained and enhanced this
+package for the Debian project, with the help of all the
+community.</p>
+
+<p style="margin-left:9%; margin-top: 1em">31st March 2001
+&ndash; present day: Colin Watson
+&lt;cjwatson@debian.org&gt; is now developing and
+maintaining man-db.</p>
+
+<h2>BUGS
+<a name="BUGS"></a>
+</h2>
+
+
+
+<p style="margin-left:9%; margin-top: 1em">https://gitlab.com/man-db/man-db/-/issues
+<br>
+ https://savannah.nongnu.org/bugs/?group=man-db</p>
+<hr>
+</body>
+</html>

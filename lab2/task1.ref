@@ -1,0 +1,84 @@
+/* <Go> == empty */
+$ENTRY Go {
+    /* empty */ = <TailAll <GetCount>>
+}
+
+/* <TailAll s.Count s.Arg> == empty */
+/* s.Count ::= s.NUMBER */
+/* s.Arg ::= s.NUMBER */
+TailAll {
+    0 s.Arg = <Prout>;
+    s.Count s.Arg
+    , <Arg s.Arg>
+    : {
+        /* empty */ = /* empty */;
+        e.Path = <Prout <Join <Tail s.Count e.Path> '\n'>>
+            <TailAll s.Count <+ s.Arg 1>>
+    };
+}
+
+/* <GetCount> == s.Count s.Arg */
+/* s.Count ::= s.NUMBER */
+/* s.Arg ::= s.NUMBER */
+GetCount {
+    /* empty */
+    , <Arg 1>
+    : {
+        '+' e.Number = <Numb e.Number> 2;
+        e.Other = 10 1;
+    };
+}
+
+/* <Tail s.Count e.Name> == (e.Line)+; */
+/* s.Count ::= s.NUMBER */
+/* e.Name ::= s.CHAR+ */
+/* e.Line = ::= s.CHAR* */
+Tail {
+    s.Count e.Name
+    , <Last s.Count <GetLines e.Name>>
+    : {
+        (e.Prefix) e.Suffix = e.Suffix;
+    }
+}
+
+/* <Join e.Acc e.First e.Rest s.Separator> == e.Acc */
+/* e.Acc ::= (s.CHAR*)? */
+/* e.First ::= (s.CHAR*)? */
+/* e.Rest ::= (s.CHAR*)* */
+/* s.Separator ::= s.CHAR */
+Join {
+    (e.Acc) (e.First) e.Rest s.Separator = <Join
+                                        (e.Acc s.Separator e.First)
+                                        e.Rest
+                                        s.Separator>;
+    (e.Acc) s.Separator = e.Acc;
+    s.Separator = /* empty */
+}
+
+/* <FileNo> == s.NUMBER */
+FileNo {
+    /* empty */ = 10;
+}
+
+/* <GetLines e.Name> == e.Lines */
+/* e.Name ::= s.CHAR+ */
+/* e.Lines ::= (e.Line)* */
+/* e.Line ::= s.CHAR* */
+GetLines {
+    e.Name = <Open 'r' <FileNo> e.Name>
+    <GetLinesDo>
+    <Close <FileNo>>
+}
+
+/* <GetLinesDo e.Lines> == e.Lines */
+/* e.Lines ::= (e.Line)* */
+/* e.Line ::= s.CHAR* */
+GetLinesDo {
+    e.Lines
+    , <Get <FileNo>>
+    : {
+        0 = e.Lines;
+        e.Line 0 = e.Lines (e.Line);
+        e.Line = <GetLinesDo e.Lines (e.Line)>;
+    }
+}
